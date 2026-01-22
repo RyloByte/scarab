@@ -90,3 +90,11 @@ Upload to Anaconda Cloud:
 ```sh
 ANACONDA_USER=yourname make conda-upload
 ```
+
+Release automation (GitHub Actions):
+
+```sh
+# Run the release workflow manually from GitHub Actions
+# or using the GitHub CLI
+# gh workflow run release.yml -f version=0.0.2
+```

@@ -1,0 +1,116 @@
+name: release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version (e.g., 0.0.2)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Bump version
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          python - <<'PY'
+          import os
+          import re
+          from datetime import date
+          from pathlib import Path
+
+          version = os.environ["VERSION"]
+
+          init_path = Path("src/scarab/__init__.py")
+          init_text = init_path.read_text(encoding="utf-8")
+          init_text = re.sub(
+              r'^version\s*=\s*["\"][^"\"]+["\"]',
+              f'version = "{version}"',
+              init_text,
+              flags=re.M,
+          )
+          init_path.write_text(init_text, encoding="utf-8")
+
+          meta_path = Path("conda-recipe/meta.yaml")
+          if meta_path.exists():
+              meta_text = meta_path.read_text(encoding="utf-8")
+              meta_text = re.sub(
+                  r'^{% set version = "[^"]+" %}',
+                  f'{{% set version = "{version}" %}}',
+                  meta_text,
+                  flags=re.M,
+              )
+              meta_path.write_text(meta_text, encoding="utf-8")
+
+          changelog_path = Path("CHANGELOG.md")
+          if changelog_path.exists():
+              changelog_text = changelog_path.read_text(encoding="utf-8")
+              header = (
+                  f"## [{version}] - {date.today().isoformat()}\n\n"
+                  "### Added\n\n"
+                  "### Fixed\n\n"
+                  "### Changed\n"
+              )
+              if header not in changelog_text:
+                  changelog_text = header + "\n" + changelog_text.lstrip()
+                  changelog_path.write_text(changelog_text, encoding="utf-8")
+          PY
+
+      - name: Commit and tag
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add src/scarab/__init__.py conda-recipe/meta.yaml CHANGELOG.md
+          git commit -m "Release v${VERSION}"
+          git tag "v${VERSION}"
+          git push origin HEAD
+          git push origin "v${VERSION}"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ inputs.version }}
+          generate_release_notes: true
+
+      - name: Update conda recipe sha256
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          url="https://github.com/RyloByte/scarab/archive/refs/tags/v${VERSION}.tar.gz"
+          for i in 1 2 3 4 5; do
+            if curl -fsSL "$url" -o /tmp/scarab.tar.gz; then
+              break
+            fi
+            sleep 3
+          done
+          if [ ! -s /tmp/scarab.tar.gz ]; then
+            echo "Failed to download release tarball"; exit 1;
+          fi
+          sha=$(sha256sum /tmp/scarab.tar.gz | awk '{print $1}')
+          SHA=$sha python - <<'PY'
+          import os
+          import re
+          from pathlib import Path
+
+          sha = os.environ["SHA"]
+          meta_path = Path("conda-recipe/meta.yaml")
+          if not meta_path.exists():
+              raise SystemExit("conda-recipe/meta.yaml not found")
+          meta_text = meta_path.read_text(encoding="utf-8")
+          meta_text = re.sub(r'^\s*sha256:\s*[0-9a-f]+', f'  sha256: {sha}', meta_text, flags=re.M)
+          meta_path.write_text(meta_text, encoding="utf-8")
+          PY
+          git add conda-recipe/meta.yaml
+          git commit -m "Update conda recipe sha256 for v${VERSION}"
+          git push origin HEAD
