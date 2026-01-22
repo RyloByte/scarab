@@ -1,15 +1,13 @@
 import glob
-import hashlib
 import os
 
-import dit
 import hdbscan
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
 import umap
-from dit.other import renyi_entropy
+from scarab.entropy import renyi_entropy
 from scipy import sparse
 from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.preprocessing import StandardScaler
@@ -33,16 +31,12 @@ def calc_ref_entropy(sample_list, ref_dir, rerun_ref):
                     samp_label = samp_id.rsplit('_', 1)[0]
                     samp_rep = samp_id.rsplit('_', 1)[1][-1]
                 cov_df = pd.read_csv(samp_file, sep='\t', header=0)
-                cov_df['hash_id'] = [hashlib.sha256(x.encode(encoding='utf-8')).hexdigest()
-                                     for x in cov_df['contigName']
-                                     ]
                 depth_sum = cov_df['totalAvgDepth'].sum()
-                hash_list = cov_df['hash_id'].tolist()
                 relative_depth = [x / depth_sum for x in cov_df['totalAvgDepth']]
-                cov_dist = dit.Distribution(hash_list, relative_depth)
+                probs = relative_depth
                 q_list = [0, 1, 2, 4, 8, 16, 32, np.inf]
                 for q in q_list:
-                    r_ent = renyi_entropy(cov_dist, q)
+                    r_ent = renyi_entropy(probs, q)
                     print(samp_id, q, r_ent)
                     entropy_list.append([samp_id, samp_label, samp_rep, q, r_ent])
                 '''
@@ -51,12 +45,11 @@ def calc_ref_entropy(sample_list, ref_dir, rerun_ref):
                     if col.split('.')[-1] == 'bam':
                         samp_id_c = samp_id # + '_' + str(c)
                         depth_sum = cov_df[col].sum()
-                        hash_list = cov_df['hash_id'].tolist()
                         relative_depth = [x/depth_sum for x in cov_df[col]]
-                        cov_dist = dit.Distribution(hash_list, relative_depth)
+                        probs = relative_depth
                         q_list = [0, 1, 2, 4, 8, 16, 32, np.inf]
                         for q in q_list:
-                            r_ent = renyi_entropy(cov_dist, q)
+                            r_ent = renyi_entropy(probs, q)
                             print(samp_id_c, q, r_ent)
                             entropy_list.append([samp_id_c, samp_label, samp_rep, q, r_ent])
                         c += 1
@@ -183,17 +176,12 @@ def calc_real_entrophy(mba_cov_list, working_dir):
             samp_label = samp_id
             samp_rep = 0
         cov_df = pd.read_csv(samp_file, sep='\t', header=0)
-        cov_df['hash_id'] = [hashlib.sha256(x.encode(encoding='utf-8')).hexdigest()
-                             for x in cov_df['contigName']
-                             ]
         depth_sum = cov_df['totalAvgDepth'].sum()
         cov_df['relative_depth'] = [x / depth_sum for x in cov_df['totalAvgDepth']]
-        cov_dist = dit.Distribution(cov_df['hash_id'].tolist(),
-                                    cov_df['relative_depth'].tolist()
-                                    )
+        probs = cov_df['relative_depth'].tolist()
         q_list = [0, 1, 2, 4, 8, 16, 32, np.inf]
         for q in q_list:
-            r_ent = renyi_entropy(cov_dist, q)
+            r_ent = renyi_entropy(probs, q)
             print(q, r_ent)
             entropy_list.append([samp_id, samp_label, samp_rep, q, r_ent])
     real_df = pd.DataFrame(entropy_list, columns=['sample_id', 'sample_type',
@@ -221,7 +209,6 @@ def remove_outliers(ent_best_df, real_merge_df, umap_fit, scale_fit):
     # If labeled as an outlier, take the closest match
     keep_cols = ['sample_id', 'sample_type', 'alpha', 'Renyi_Entropy', 'alpha_int',
                  'x_labels', 'u0', 'u1', 'cluster', 'probabilities', 'best_match', 'euc_d'
-                 ]
     best_merge_df = pd.concat([ent_best_df[keep_cols],
                                real_merge_df[keep_cols]]
                               )

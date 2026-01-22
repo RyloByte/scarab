@@ -1,20 +1,18 @@
 __author__ = 'Ryan J McLaughlin'
 
 import glob
-import hashlib
 import logging
 import os
 import shutil
 from collections import Counter
 from itertools import product, islice
 
-import dit
 import hdbscan
 import numpy as np
 import pandas as pd
 import pyfastx
 import umap
-from dit.other import renyi_entropy
+from scarab.entropy import renyi_entropy
 from skbio.stats.composition import clr
 from sklearn.preprocessing import StandardScaler
 from tqdm import tqdm
@@ -409,17 +407,12 @@ def calc_real_entrophy(mba_cov_list, working_dir):
         cov_df = pd.read_csv(samp_file, sep='\t', header=0)
         if cov_df.shape[0] > 100000:  # need to sub-sample if table is huge
             cov_df = cov_df.sample(n=int(100000), random_state=42, replace=False)
-        cov_df['hash_id'] = [hashlib.sha256(x.encode(encoding='utf-8')).hexdigest()
-                             for x in cov_df['contigName']
-                             ]
         depth_sum = cov_df['totalAvgDepth'].sum()
         cov_df['relative_depth'] = [x / depth_sum for x in cov_df['totalAvgDepth']]
-        cov_dist = dit.Distribution(cov_df['hash_id'].tolist(),
-                                    cov_df['relative_depth'].tolist()
-                                    )
+        probs = cov_df['relative_depth'].tolist()
         q_list = [0, 1, 2, 4, 8, 16, 32, np.inf]
         for q in progress(q_list):
-            r_ent = renyi_entropy(cov_dist, q)
+            r_ent = renyi_entropy(probs, q)
             entropy_list.append([samp_id, samp_label, samp_rep, q, r_ent])
     real_df = pd.DataFrame(entropy_list, columns=['sample_id', 'sample_type',
                                                   'sample_rep', 'alpha',

@@ -58,7 +58,6 @@ SETUP_METADATA = \
             "hdbscan",
             "sourmash",
             "pyfastx",
-            "dit",
             "scikit-bio",
             "tqdm",
         ]

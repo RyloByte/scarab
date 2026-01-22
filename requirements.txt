@@ -5,6 +5,5 @@ umap-learn
 hdbscan
 sourmash
 pyfastx
-dit
 scikit-bio
 tqdm

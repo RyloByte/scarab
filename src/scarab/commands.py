@@ -10,11 +10,14 @@ logger = logging.getLogger(__name__)
 
 def _python_dependency_versions():
     """Return installed Python package versions as a name -> version mapping."""
-    from pip._internal.operations import freeze
+    from importlib import metadata
 
-    return {x.split('==')[0]: x.split('==')[1] for x in freeze.freeze()}
-
-
+    versions = {}
+    for dist in metadata.distributions():
+        name = dist.metadata.get('Name')
+        if name:
+            versions[name] = dist.version
+    return versions
 def _parse_recruit_args(sys_args):
     """Parse CLI arguments for the recruit subcommand."""
     import scarab.s_args as s_args
@@ -197,14 +200,17 @@ def info(sys_args):
 
 def recruit(sys_args):
     """Recruit environmental reads to reference contigs."""
+    args = _parse_recruit_args(sys_args)
+
     import scarab.logger as s_log
+
+    s_log.prep_logging(os.path.join(args.save_path, 'SCARAB_log.txt'), verbosity=args.verbose)
+    logger.info('Loading recruit dependencies; this may take a moment.')
+
     import scarab.compile_recruits as com
     import scarab.utilities as s_utils
-
-    args = _parse_recruit_args(sys_args)
     recruit_s = _configure_recruit_base(args)
     recruit_s.mode = _select_mode(recruit_s)
-    s_log.prep_logging(os.path.join(recruit_s.save_path, 'SCARAB_log.txt'), verbosity=args.verbose)
 
     mg_file, mg_sub_file = _build_metagenome_subcontigs(recruit_s)
     trust_files, minhash_df_dict = _build_trusted_assets(recruit_s, mg_file)

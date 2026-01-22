@@ -26,3 +26,6 @@ dev_utils/renyi_entropy/Scarab_CV/*
 dev_utils/genome_qc/.snakemake
 dev_utils/genome_qc/config.yaml
 
+
+# Packaging metadata
+/*.egg-info

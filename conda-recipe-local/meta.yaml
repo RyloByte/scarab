@@ -6,9 +6,7 @@ package:
   version: {{ version }}
 
 source:
-  url: https://github.com/RyloByte/scarab/archive/refs/tags/v{{ version }}.tar.gz
-  sha256: 724696040ca99f15ca24698c8fe01e58fceffb8f386a1985deaa4e7b71169dd0
-
+  path: ..
 build:
   noarch: python
   number: 0

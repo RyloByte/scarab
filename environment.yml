@@ -26,5 +26,4 @@ dependencies:
   - zlib
   - pip
   - pip:
-    - dit
     - pyfastx
