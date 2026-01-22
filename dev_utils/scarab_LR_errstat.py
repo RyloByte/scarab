@@ -330,38 +330,38 @@ def parse_report(p):
     return fixed_df
 
 
-def runErrorAnalysis(saberout_path, synsrc_path, src_metag_file, mocksag_path,
+def runErrorAnalysis(scarabout_path, synsrc_path, src_metag_file, mocksag_path,
                      sample_type, sample_id, mode, params, nthreads
                      ):
     ##################################################################################################
     # INPUT files
-    # saberout_path = sys.argv[1]
+    # scarabout_path = sys.argv[1]
     # synsrc_path = sys.argv[2]
     # mocksag_path = joinpath(synsrc_path, 'Final_SAGs_20k_rep1/')
     src_genome_path = joinpath(synsrc_path, 'fasta/')
-    sag_tax_map = joinpath('/home/ryan/SABer_bench/GenQC', 'CAMI2.gen2ncbi.csv') # synsrc_path, 'genome_taxa_info.tsv')
+    sag_tax_map = joinpath('/home/ryan/SCARAB_bench/GenQC', 'CAMI2.gen2ncbi.csv') # synsrc_path, 'genome_taxa_info.tsv')
     mg_contig_map = joinpath(synsrc_path, 'gsa_mapping_pool.binning')
     src_contig_cnt = joinpath(synsrc_path, 'src_fasta.stats.tsv')
     src2id_map = joinpath(synsrc_path, 'genome_to_id.tsv')
-    err_path = joinpath(saberout_path, 'error_analysis')
+    err_path = joinpath(scarabout_path, 'error_analysis')
     sag2cami_file = joinpath(err_path, 'sag2cami_map.tsv')
     src2contig_file = joinpath(err_path, 'src2contig_map.tsv')
     src2mock_file = joinpath(err_path, 'src_mock_df.tsv')
     #mhr_out_files = glob.glob(joinpath(mhrout_path, '*.mhr_recruits.tsv'))
-    denovo_out_file = glob.glob(joinpath(saberout_path, '*.denovo_clusters.tsv'))[0]
+    denovo_out_file = glob.glob(joinpath(scarabout_path, '*.denovo_clusters.tsv'))[0]
     denovo_errstat_file = joinpath(err_path, 'denovo.errstat.tsv')
     denovo_mean_file = joinpath(err_path, 'denovo.errstat.mean.tsv')
     try:
-        trusted_out_file = glob.glob(joinpath(saberout_path, '*.hdbscan_clusters.tsv'))[0]
+        trusted_out_file = glob.glob(joinpath(scarabout_path, '*.hdbscan_clusters.tsv'))[0]
         trusted_errstat_file = joinpath(err_path, 'hdbscan_clusters.errstat.tsv')
         trusted_mean_file = joinpath(err_path, 'hdbscan_clusters.errstat.mean.tsv')
-        ocsvm_out_file = glob.glob(joinpath(saberout_path, '*.ocsvm_clusters.tsv'))[0]
+        ocsvm_out_file = glob.glob(joinpath(scarabout_path, '*.ocsvm_clusters.tsv'))[0]
         ocsvm_errstat_file = joinpath(err_path, 'ocsvm_clusters.errstat.tsv')
         ocsvm_mean_file = joinpath(err_path, 'ocsvm_clusters.errstat.mean.tsv')
-        inter_out_file = glob.glob(joinpath(saberout_path, '*.inter_clusters.tsv'))[0]
+        inter_out_file = glob.glob(joinpath(scarabout_path, '*.inter_clusters.tsv'))[0]
         inter_errstat_file = joinpath(err_path, 'inter_clusters.errstat.tsv')
         inter_mean_file = joinpath(err_path, 'inter_clusters.errstat.mean.tsv')
-        xpg_file_list = glob.glob(joinpath(saberout_path, 'xpgs/*.xPG.fasta'))
+        xpg_file_list = glob.glob(joinpath(scarabout_path, 'xpgs/*.xPG.fasta'))
         xpg_errstat_file = joinpath(err_path, 'xpg_clusters.errstat.tsv')
         xpg_mean_file = joinpath(err_path, 'xpg_clusters.errstat.mean.tsv')
         dnadiff_path = joinpath(err_path, 'dnadiff')

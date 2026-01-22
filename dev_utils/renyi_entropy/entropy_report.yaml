@@ -1,0 +1,11 @@
+name: entropy_report
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - numpy>=1.24
+  - pandas=2.1.*
+  - matplotlib=3.8.*
+  - scipy>=1.10
+  - scikit-learn>=1.3
+  - statsmodels>=0.14

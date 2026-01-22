@@ -4,9 +4,9 @@ import argparse
 from argparse import RawTextHelpFormatter
 
 
-class SABerArgumentParser(argparse.ArgumentParser):
+class ScarabArgumentParser(argparse.ArgumentParser):
     """
-    A base argparse ArgumentParser for SABer with functions to furnish with common arguments.
+    A base argparse ArgumentParser for SCARAB with functions to furnish with common arguments.
     This standardizes the interface for a unified aesthetic across all sub-commands
     """
 
@@ -19,7 +19,7 @@ class SABerArgumentParser(argparse.ArgumentParser):
             for example verbose, help, num_threads
         :param kwargs:
         """
-        super(SABerArgumentParser, self).__init__(add_help=False,
+        super(ScarabArgumentParser, self).__init__(add_help=False,
                                                   formatter_class=RawTextHelpFormatter,
                                                   **kwargs
                                                   )
@@ -35,7 +35,7 @@ class SABerArgumentParser(argparse.ArgumentParser):
                                      help="Show this help message and exit")
 
     def parse_args(self, args=None, namespace=None):
-        args = super(SABerArgumentParser, self).parse_args(args=args, namespace=namespace)
+        args = super(ScarabArgumentParser, self).parse_args(args=args, namespace=namespace)
 
         return args
 
@@ -123,6 +123,6 @@ class SABerArgumentParser(argparse.ArgumentParser):
                                      )
         self.miscellany.add_argument("--force", required=False, default=False,
                                      action="store_true",
-                                     help="Force SABer to run even if final recruits files exist [False]"
+                                     help="Force SCARAB to run even if final recruits files exist [False]"
                                      )
         return

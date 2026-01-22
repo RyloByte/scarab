@@ -8,17 +8,17 @@ from Bio import SeqIO
 def get_SAGs(sag_path):
     # Find the SAGs!
     if os.path.isdir(sag_path):
-        print('[SABer]: Directory specified, looking for SAGs\n')
+        print('[SCARAB]: Directory specified, looking for SAGs\n')
         sag_list = [os.path.join(sag_path, f) for f in
                     os.listdir(sag_path) if ((f.split('.')[-1] == 'fasta' or
                                               f.split('.')[-1] == 'fna') and 'Sample' not in f)
                     ]
-        print('[SABer]: Found %s SAGs in directory\n'
+        print('[SCARAB]: Found %s SAGs in directory\n'
               % str(len(sag_list))
               )
 
     elif os.path.isfile(sag_path):
-        print('[SABer]: File specified, processing %s\n'
+        print('[SCARAB]: File specified, processing %s\n'
               % os.path.basename(sag_path)
               )
         sag_list = [sag_path]
@@ -137,7 +137,7 @@ def main(sag_path, save_path, max_contig_len, min_contig_len, overlap_len, per_c
 
 if __name__ == '__main__':
     sag_path = '/home/rmclaughlin/Ryan/CAMI_I_HIGH/source_genomes/'
-    save_path = '~/Ryan/test_SABer/mockSAGs/new_mocks/'
+    save_path = '~/Ryan/test_SCARAB/mockSAGs/new_mocks/'
     max_contig_len = 8000
     min_contig_len = 1500
     overlap_len = 0

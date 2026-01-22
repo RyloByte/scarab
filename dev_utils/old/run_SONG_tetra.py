@@ -17,7 +17,7 @@ def get_kmer(seq, n):
         yield result
 
 
-fasta_file = '/home/rmclaughlin/sharknado/Sandbox/Ryan/SABer/SABer_stdout_3000/subcontigs/CAMI_high_GoldStandardAssembly.3000.subcontigs.fasta'
+fasta_file = '/home/rmclaughlin/sharknado/Sandbox/Ryan/SCARAB/SCARAB_stdout_3000/subcontigs/CAMI_high_GoldStandardAssembly.3000.subcontigs.fasta'
 
 fasta = pyfastx.Fasta(fasta_file)
 

@@ -9,13 +9,14 @@ class MyFormatter(logging.Formatter):
     """
     Controls the formatting of the log through the logging package
     """
-    error_fmt = "%(levelname)s - %(module)s, line %(lineno)d:\n%(message)s"
-    warning_fmt = "%(levelname)s:\n%(message)s"
-    debug_fmt = "%(asctime)s\n%(message)s"
-    info_fmt = "%(message)s"
+    base_fmt = "%(asctime)s %(name)s %(levelname)s %(message)s"
+    error_fmt = base_fmt
+    warning_fmt = base_fmt
+    debug_fmt = base_fmt
+    info_fmt = base_fmt
 
     def __init__(self):
-        super().__init__(fmt="%(levelname)s: %(message)s",
+        super().__init__(fmt=MyFormatter.base_fmt,
                          datefmt="%d/%m %H:%M:%S")
 
     def format(self, record):
@@ -42,6 +43,12 @@ class MyFormatter(logging.Formatter):
 
         # Restore the original format configured by the user
         self._style._fmt = format_orig
+        if '\n' in result:
+            message = record.getMessage()
+            prefix = ''
+            if message and message in result:
+                prefix = result.split(message)[0]
+            result = result.replace('\n', '\n' + prefix)
 
         return result
 
@@ -65,11 +72,13 @@ def prep_logging(log_file_name=None, verbosity=False):
         return
 
     formatter = MyFormatter()
+    logger.setLevel(logging.DEBUG if log_file_name else logging_level)
+
     # Set the console handler normally writing to stdout/stderr
     ch = logging.StreamHandler()
     ch.setLevel(logging_level)
-    ch.terminator = ''
     ch.setFormatter(formatter)
+    logger.addHandler(ch)
 
     if log_file_name:
         output_dir = os.path.dirname(log_file_name)
@@ -79,15 +88,9 @@ def prep_logging(log_file_name=None, verbosity=False):
         except (IOError, OSError):
             sys.stderr.write("ERROR: Unable to make directory '" + output_dir + "'.\n")
             sys.exit(3)
-        logging.basicConfig(level=logging.DEBUG,
-                            filename=log_file_name,
-                            filemode='w',
-                            datefmt="%d/%m %H:%M:%S",
-                            format="%(asctime)s %(levelname)s:\n%(message)s")
-        logging.getLogger('').addHandler(ch)
-        logging.getLogger('').propagate = False
-    else:
-        logging.basicConfig(level=logging_level,
-                            datefmt="%d/%m %H:%M:%S",
-                            format="%(asctime)s %(levelname)s:\n%(message)s")
+        fh = logging.FileHandler(log_file_name, mode='w')
+        fh.setLevel(logging.DEBUG)
+        fh.setFormatter(formatter)
+        logger.addHandler(fh)
+        logger.propagate = False
     return

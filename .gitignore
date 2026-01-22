@@ -3,7 +3,7 @@ tests/test-data
 __pycache__
 build
 dist
-dist/SABer-0.0.1.tar.gz
+dist/Scarab-0.0.1.tar.gz
 *.egg-info
 *.sif
 
@@ -15,13 +15,13 @@ dev_utils/renyi_entropy/references/*
 
 dev_utils/renyi_entropy/SI
 
-dev_utils/renyi_entropy/SABer_CV/*
-!dev_utils/renyi_entropy/SABer_CV/CV_all_table.tsv
-!dev_utils/renyi_entropy/SABer_CV/CV_best_table.tsv
-!dev_utils/renyi_entropy/SABer_CV/MQ_agg_params.tsv
-!dev_utils/renyi_entropy/SABer_CV/MQ_agg_stats.tsv
-!dev_utils/renyi_entropy/SABer_CV/NC_agg_params.tsv
-!dev_utils/renyi_entropy/SABer_CV/NC_agg_stats.tsv
+dev_utils/renyi_entropy/Scarab_CV/*
+!dev_utils/renyi_entropy/Scarab_CV/CV_all_table.tsv
+!dev_utils/renyi_entropy/Scarab_CV/CV_best_table.tsv
+!dev_utils/renyi_entropy/Scarab_CV/MQ_agg_params.tsv
+!dev_utils/renyi_entropy/Scarab_CV/MQ_agg_stats.tsv
+!dev_utils/renyi_entropy/Scarab_CV/NC_agg_params.tsv
+!dev_utils/renyi_entropy/Scarab_CV/NC_agg_stats.tsv
 
 dev_utils/genome_qc/.snakemake
 dev_utils/genome_qc/config.yaml

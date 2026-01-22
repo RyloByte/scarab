@@ -1,0 +1,51 @@
+{% set name = "scarab" %}
+{% set version = "0.0.1" %}
+
+package:
+  name: {{ name }}
+  version: {{ version }}
+
+source:
+  url: https://github.com/hallamlab/scarab/archive/refs/tags/v{{ version }}.tar.gz
+  sha256: REPLACE_ME
+
+build:
+  noarch: python
+  number: 0
+  script: "{{ PYTHON }} -m pip install . --no-deps -vv"
+
+requirements:
+  host:
+    - python >=3.8
+    - pip
+  run:
+    - python >=3.8
+    - numpy
+    - pandas
+    - scipy
+    - scikit-learn
+    - umap-learn
+    - hdbscan
+    - sourmash
+    - pyfastx
+    - dit
+    - scikit-bio
+    - tqdm
+    - minimap2
+    - samtools
+    - metabat2
+    - bbmap
+
+test:
+  commands:
+    - scarab info -h
+
+about:
+  home: https://github.com/hallamlab/scarab
+  license: GPL-3.0
+  license_file: LICENSE
+  summary: SCARAB recruits metagenomic reads using single-cell amplified genomes as references.
+
+extra:
+  recipe-maintainers:
+    - hallamlab

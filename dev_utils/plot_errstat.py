@@ -19,8 +19,8 @@ def calc_f1score(P, R):
     return F1_score
 
 
-saber_single_file = sys.argv[1]
-saber_multi_file = sys.argv[2]
+scarab_single_file = sys.argv[1]
+scarab_multi_file = sys.argv[2]
 unitem_single_file = sys.argv[3]
 unitem_multi_file = sys.argv[4]
 vamb_multi_file = sys.argv[5]
@@ -70,11 +70,11 @@ binner2rank = {'maxbin': 0,
                'metabat': 1,
                'metabat2': 2,
                'VAMB': 3,
-               'SABer_denovo': 4,
-               'SABer_intersect': 5,
-               'SABer_xPG': 6,
-               'SABer_hdbscan': 7,
-               'SABer_ocsvm': 8
+               'SCARAB_denovo': 4,
+               'SCARAB_intersect': 5,
+               'SCARAB_xPG': 6,
+               'SCARAB_hdbscan': 7,
+               'SCARAB_ocsvm': 8
                }
 
 level2rank = {'exact_assembly_single': 0,
@@ -93,16 +93,16 @@ binner2cmap = {'maxbin': cmap_pastel[0],
                'metabat': cmap_pastel[9],
                'metabat2': cmap_pastel[2],
                'VAMB': cmap_pastel[4],
-               'SABer_denovo': cmap_pastel[3],
-               'SABer_intersect': cmap_pastel[1],
-               'SABer_xPG': cmap[1],
-                'SABer_hdbscan': cmap_pastel[1],
-               'SABer_ocsvm': cmap_pastel[1]
+               'SCARAB_denovo': cmap_pastel[3],
+               'SCARAB_intersect': cmap_pastel[1],
+               'SCARAB_xPG': cmap[1],
+                'SCARAB_hdbscan': cmap_pastel[1],
+               'SCARAB_ocsvm': cmap_pastel[1]
                }
 
 # Load stats tables
-saber_single_df = pd.read_csv(saber_single_file, header=0, sep='\t')
-saber_multi_df = pd.read_csv(saber_multi_file, header=0, sep='\t')
+scarab_single_df = pd.read_csv(scarab_single_file, header=0, sep='\t')
+scarab_multi_df = pd.read_csv(scarab_multi_file, header=0, sep='\t')
 unitem_single_df = pd.read_csv(unitem_single_file, header=0, sep='\t')
 unitem_multi_df = pd.read_csv(unitem_multi_file, header=0, sep='\t')
 vamb_multi_df = pd.read_csv(vamb_multi_file, header=0, sep='\t')
@@ -118,7 +118,7 @@ diffdna_multi_df = pd.read_csv(diffdna_multi_file, sep='\t',
 #             'possible_bp', 'total_bp', 'exact_label', 'strain_label',
 #             '>20Kb', 'NC_bins', 'MQ_bins'
 #             ]
-# SABer first
+# SCARAB first
 diffdna_single_df['sample_id'] = ['S' + str(x) for x in
                                   diffdna_single_df['sample_id']
                                   ]
@@ -132,31 +132,31 @@ diffdna_multi_df['sample_id'] = ['S' + str(x) for x in
 #                                diffdna_multi_df['ref_id']
 #                                ]
 
-saber_single_df['binner'] = ['_'.join(['SABer', str(x), str(y), str(z)])
+scarab_single_df['binner'] = ['_'.join(['SCARAB', str(x), str(y), str(z)])
                              for x, y, z in
-                             zip(saber_single_df['algorithm'],
-                                 saber_single_df['mode'],
-                                 saber_single_df['param_set']
+                             zip(scarab_single_df['algorithm'],
+                                 scarab_single_df['mode'],
+                                 scarab_single_df['param_set']
                                  )
                              ]
-saber_single_df['bin_mode'] = 'single'
-saber_single_df['sample_id'] = ['S' + str(x) for x in
-                                saber_single_df['sample_id']
+scarab_single_df['bin_mode'] = 'single'
+scarab_single_df['sample_id'] = ['S' + str(x) for x in
+                                scarab_single_df['sample_id']
                                 ]
-saber_s_df = saber_single_df  # .drop(columns=['algorithm', 'mode', 'param_set']
+scarab_s_df = scarab_single_df  # .drop(columns=['algorithm', 'mode', 'param_set']
 #      )[col_order]
-saber_multi_df['binner'] = ['_'.join(['SABer', str(x), str(y), str(z)])
+scarab_multi_df['binner'] = ['_'.join(['SCARAB', str(x), str(y), str(z)])
                             for x, y, z in
-                            zip(saber_multi_df['algorithm'],
-                                saber_multi_df['mode'],
-                                saber_multi_df['param_set']
+                            zip(scarab_multi_df['algorithm'],
+                                scarab_multi_df['mode'],
+                                scarab_multi_df['param_set']
                                 )
                             ]
-saber_multi_df['bin_mode'] = 'multi'
-saber_multi_df['sample_id'] = ['S' + str(x) for x in
-                               saber_multi_df['sample_id']
+scarab_multi_df['bin_mode'] = 'multi'
+scarab_multi_df['sample_id'] = ['S' + str(x) for x in
+                               scarab_multi_df['sample_id']
                                ]
-saber_m_df = saber_multi_df  # .drop(columns=['algorithm', 'mode', 'param_set']
+scarab_m_df = scarab_multi_df  # .drop(columns=['algorithm', 'mode', 'param_set']
 #      )[col_order]
 
 # UniteM Binners
@@ -179,7 +179,7 @@ vamb_multi_df['sample_id'] = ['S' + str(x) for x in
                               ]
 vamb_m_df = vamb_multi_df  #.drop(columns=['algorithm'])[col_order]
 
-bin_cat_df = pd.concat([saber_s_df, saber_m_df,
+bin_cat_df = pd.concat([scarab_s_df, scarab_m_df,
                         unitem_s_df, unitem_m_df,
                         vamb_m_df
                         ])
@@ -421,11 +421,11 @@ k_cols = [x for x in cat_cnt_df.columns if x != 'index']
 cat_cnt_df = cat_cnt_df[k_cols]
 cat_cnt_df.to_csv(os.path.join(workdir, 'stats/Countup_NC.tsv'), sep='\t', index=False)
 cat_cnt_df['binner'] = [x.split('_', 2)[0] + '_' + x.split('_', 2)[1]
-                        if 'SABer' in x else x.split('_', 1)[0]
+                        if 'SCARAB' in x else x.split('_', 1)[0]
                         for x in cat_cnt_df['binner_config']
                         ]
 
-filter_list = ['SABer_denovo', 'SABer_hdbscan', 'SABer_ocsvm', 'SABer_intersect']
+filter_list = ['SCARAB_denovo', 'SCARAB_hdbscan', 'SCARAB_ocsvm', 'SCARAB_intersect']
 filter_cnt_df = cat_cnt_df.query("binner not in @filter_list")
 filter_cnt_df.sort_values('ext_nc_uniq', ascending=False, inplace=True)
 dedup_cnt_df = filter_cnt_df.drop_duplicates(subset=['binner', 'level_mode'])
@@ -546,17 +546,17 @@ R_df.columns = ['best_label', 'dataset', 'sample_type',
                 ]
 R_df['type_rank'] = [type2rank[x] for x in R_df['dataset']]
 R_df.sort_values(by=['data_type', 'type_rank'], inplace=True)
-R_df.to_csv(os.path.join(workdir, 'SABer.SAG_xPG.NC.tsv'), sep='\t', index=False)
+R_df.to_csv(os.path.join(workdir, 'SCARAB.SAG_xPG.NC.tsv'), sep='\t', index=False)
 palette_map = {'xPG': cmap_muted[1], 'SAG': cmap_muted[7]}
 boxie = sns.catplot(x="dataset", y="recall", hue="data_type",
                     col='mode', row='param_set',
                     alpha=0.50, jitter=0.25,
                     data=R_df, palette=palette_map
                     )
-boxie.savefig(os.path.join(workdir, 'plots/SABer.SAG_xPG.NC.catplot.pdf'),
+boxie.savefig(os.path.join(workdir, 'plots/SCARAB.SAG_xPG.NC.catplot.pdf'),
               dpi=300
               )
-boxie.savefig(os.path.join(workdir, 'plots/SABer.SAG_xPG.NC.catplot.png'),
+boxie.savefig(os.path.join(workdir, 'plots/SCARAB.SAG_xPG.NC.catplot.png'),
               dpi=300
               )
 plt.clf()
@@ -571,7 +571,7 @@ temp_cat_df['binner_config_level_mode'] = [x + '_' + y for x, y
                                                   temp_cat_df['level_mode']
                                                   )]
 temp_cat_df['binner'] = [x.split('_', 2)[0] + '_' + x.split('_', 2)[1]
-                         if 'SABer' in x else x.split('_', 1)[0]
+                         if 'SCARAB' in x else x.split('_', 1)[0]
                          for x in temp_cat_df['binner_config']
                          ]
 temp_filter_df = temp_cat_df.query("binner not in @filter_list")
@@ -647,7 +647,7 @@ temp_cat_df['binner_config_level_mode'] = [x + '_' + y for x, y
                                                   temp_cat_df['level_mode']
                                                   )]
 temp_cat_df['binner'] = [x.split('_', 2)[0] + '_' + x.split('_', 2)[1]
-                         if 'SABer' in x else x.split('_', 1)[0]
+                         if 'SCARAB' in x else x.split('_', 1)[0]
                          for x in temp_cat_df['binner_config']
                          ]
 temp_filter_df = temp_cat_df.query("binner not in @filter_list")
@@ -711,7 +711,7 @@ size_filter_df = bin_cat_df.query("level == 'strain_absolute' & "
                                   "binner_config_level_mode in @bclm_list"
                                   )
 size_filter_df['binner'] = [x.split('_', 2)[0] + '_' + x.split('_', 2)[1]
-                            if 'SABer' in x else x.split('_', 1)[0]
+                            if 'SCARAB' in x else x.split('_', 1)[0]
                             for x in size_filter_df['binner_config']
                             ]
 indices = ['binner', 'bin_mode']
@@ -780,10 +780,10 @@ for level_mode in sample_metrics_df['level_mode'].unique():
 
 cat_cnt_df = pd.concat(cnt_df_list)
 cat_cnt_df['binner'] = [x.split('_', 2)[0] + '_' + x.split('_', 2)[1]
-                        if 'SABer' in x else x.split('_', 1)[0]
+                        if 'SCARAB' in x else x.split('_', 1)[0]
                         for x in cat_cnt_df['binner_config']
                         ]
-filter_list = ['SABer_denovo', 'SABer_hdbscan', 'SABer_ocsvm', 'SABer_intersect']
+filter_list = ['SCARAB_denovo', 'SCARAB_hdbscan', 'SCARAB_ocsvm', 'SCARAB_intersect']
 filter_cnt_df = cat_cnt_df.query("binner not in @filter_list")
 dedup_cnt_df = filter_cnt_df.drop_duplicates(subset=['binner', 'level_mode'])
 dedup_cnt_df.to_csv(os.path.join(workdir, 'tables/ALL_BINNERS.MQ.uniq_sample.counts.tsv'),
@@ -799,7 +799,7 @@ temp_cat_df['binner_config_level_mode'] = [x + '_' + y for x, y
                                                   temp_cat_df['level_mode']
                                                   )]
 temp_cat_df['binner'] = [x.split('_', 2)[0] + '_' + x.split('_', 2)[1]
-                         if 'SABer' in x else x.split('_', 1)[0]
+                         if 'SCARAB' in x else x.split('_', 1)[0]
                          for x in temp_cat_df['binner_config']
                          ]
 temp_filter_df = temp_cat_df.query("binner not in @filter_list")
@@ -876,7 +876,7 @@ temp_cat_df['binner_config_level_mode'] = [x + '_' + y for x, y
                                                   temp_cat_df['level_mode']
                                                   )]
 temp_cat_df['binner'] = [x.split('_', 2)[0] + '_' + x.split('_', 2)[1]
-                         if 'SABer' in x else x.split('_', 1)[0]
+                         if 'SCARAB' in x else x.split('_', 1)[0]
                          for x in temp_cat_df['binner_config']
                          ]
 temp_filter_df = temp_cat_df.query("binner not in @filter_list")
@@ -924,10 +924,10 @@ sys.exit()
 
 
 ########################################################################################################################
-# Single SABer - Near Complete, Absolute
+# Single SCARAB - Near Complete, Absolute
 ########################################################################################################################
 print('############################################################')
-print('# Single SABer')
+print('# Single SCARAB')
 print('############################################################')
 
 ss_df['label'] = [type2label[x] for x in ss_df['sample_type']]
@@ -1031,7 +1031,7 @@ ss_box = sns.catplot(x="mode", y="ext_nc_uniq", hue="algorithm",
                      linewidth=0.75, saturation=0.75, width=0.75,
                      palette=sns.color_palette("muted")
                      )
-ss_box.savefig(os.path.join(workdir, 'SABer.single.absolute.NC.mode_param.boxplot.png'),
+ss_box.savefig(os.path.join(workdir, 'SCARAB.single.absolute.NC.mode_param.boxplot.png'),
                dpi=300
                )
 plt.clf()
@@ -1043,7 +1043,7 @@ ss_box = sns.catplot(x="mode", y="ext_nc_uniq", hue="algorithm",
                      linewidth=0.75, saturation=0.75, width=0.75,
                      palette=sns.color_palette("muted")
                      )
-ss_box.savefig(os.path.join(workdir, 'SABer.single.absolute.NC.mode.boxplot.png'),
+ss_box.savefig(os.path.join(workdir, 'SCARAB.single.absolute.NC.mode.boxplot.png'),
                dpi=300
                )
 plt.clf()
@@ -1055,7 +1055,7 @@ ss_box = sns.catplot(x="param_set", y="ext_nc_uniq", hue="algorithm",
                      linewidth=0.75, saturation=0.75, width=0.75,
                      palette=sns.color_palette("muted")
                      )
-ss_box.savefig(os.path.join(workdir, 'SABer.single.absolute.NC.param.boxplot.png'),
+ss_box.savefig(os.path.join(workdir, 'SCARAB.single.absolute.NC.param.boxplot.png'),
                dpi=300
                )
 plt.clf()
@@ -1145,7 +1145,7 @@ ss_box = sns.catplot(x="mode", y="ext_mq_uniq", hue="algorithm",
                      linewidth=0.75, saturation=0.75, width=0.75,
                      palette=sns.color_palette("muted")
                      )
-ss_box.savefig(os.path.join(workdir, 'SABer.single.absolute.MQ.mode_param.boxplot.png'),
+ss_box.savefig(os.path.join(workdir, 'SCARAB.single.absolute.MQ.mode_param.boxplot.png'),
                dpi=300
                )
 plt.clf()
@@ -1157,7 +1157,7 @@ ss_box = sns.catplot(x="mode", y="ext_mq_uniq", hue="algorithm",
                      linewidth=0.75, saturation=0.75, width=0.75,
                      palette=sns.color_palette("muted")
                      )
-ss_box.savefig(os.path.join(workdir, 'SABer.single.absolute.MQ.mode.boxplot.png'),
+ss_box.savefig(os.path.join(workdir, 'SCARAB.single.absolute.MQ.mode.boxplot.png'),
                dpi=300
                )
 plt.clf()
@@ -1169,20 +1169,20 @@ ss_box = sns.catplot(x="param_set", y="ext_mq_uniq", hue="algorithm",
                      linewidth=0.75, saturation=0.75, width=0.75,
                      palette=sns.color_palette("muted")
                      )
-ss_box.savefig(os.path.join(workdir, 'SABer.single.absolute.MQ.param.boxplot.png'),
+ss_box.savefig(os.path.join(workdir, 'SCARAB.single.absolute.MQ.param.boxplot.png'),
                dpi=300
                )
 plt.clf()
 plt.close()
 
 ########################################################################################################################
-# Multi SABer
+# Multi SCARAB
 ########################################################################################################################
 print('############################################################')
-print('# Multi SABer')
+print('# Multi SCARAB')
 print('############################################################')
 
-sm_df = pd.read_csv(saber_multi_file, header=0, sep='\t')
+sm_df = pd.read_csv(scarab_multi_file, header=0, sep='\t')
 sm_df['label'] = [type2label[x] for x in sm_df['sample_type']]
 sm_df['algo_rank'] = [algo2rank[x] for x in sm_df['algorithm']]
 sm_df['type_rank'] = [type2rank[x] for x in sm_df['sample_type']]
@@ -1284,7 +1284,7 @@ ss_box = sns.catplot(x="mode", y="ext_nc_uniq", hue="algorithm",
                      linewidth=0.75, saturation=0.75, width=0.75,
                      palette=sns.color_palette("muted")
                      )
-ss_box.savefig(os.path.join(workdir, 'SABer.multi.absolute.NC.mode_param.boxplot.png'),
+ss_box.savefig(os.path.join(workdir, 'SCARAB.multi.absolute.NC.mode_param.boxplot.png'),
                dpi=300
                )
 plt.clf()
@@ -1296,7 +1296,7 @@ ss_box = sns.catplot(x="mode", y="ext_nc_uniq", hue="algorithm",
                      linewidth=0.75, saturation=0.75, width=0.75,
                      palette=sns.color_palette("muted")
                      )
-ss_box.savefig(os.path.join(workdir, 'SABer.multi.absolute.NC.mode.boxplot.png'),
+ss_box.savefig(os.path.join(workdir, 'SCARAB.multi.absolute.NC.mode.boxplot.png'),
                dpi=300
                )
 plt.clf()
@@ -1308,7 +1308,7 @@ ss_box = sns.catplot(x="param_set", y="ext_nc_uniq", hue="algorithm",
                      linewidth=0.75, saturation=0.75, width=0.75,
                      palette=sns.color_palette("muted")
                      )
-ss_box.savefig(os.path.join(workdir, 'SABer.multi.absolute.NC.param.boxplot.png'),
+ss_box.savefig(os.path.join(workdir, 'SCARAB.multi.absolute.NC.param.boxplot.png'),
                dpi=300
                )
 plt.clf()
@@ -1398,7 +1398,7 @@ ss_box = sns.catplot(x="mode", y="ext_mq_uniq", hue="algorithm",
                      linewidth=0.75, saturation=0.75, width=0.75,
                      palette=sns.color_palette("muted")
                      )
-ss_box.savefig(os.path.join(workdir, 'SABer.multi.absolute.MQ.mode_param.boxplot.png'),
+ss_box.savefig(os.path.join(workdir, 'SCARAB.multi.absolute.MQ.mode_param.boxplot.png'),
                dpi=300
                )
 plt.clf()
@@ -1410,7 +1410,7 @@ ss_box = sns.catplot(x="mode", y="ext_mq_uniq", hue="algorithm",
                      linewidth=0.75, saturation=0.75, width=0.75,
                      palette=sns.color_palette("muted")
                      )
-ss_box.savefig(os.path.join(workdir, 'SABer.multi.absolute.MQ.mode.boxplot.png'),
+ss_box.savefig(os.path.join(workdir, 'SCARAB.multi.absolute.MQ.mode.boxplot.png'),
                dpi=300
                )
 plt.clf()
@@ -1422,7 +1422,7 @@ ss_box = sns.catplot(x="param_set", y="ext_mq_uniq", hue="algorithm",
                      linewidth=0.75, saturation=0.75, width=0.75,
                      palette=sns.color_palette("muted")
                      )
-ss_box.savefig(os.path.join(workdir, 'SABer.multi.absolute.MQ.param.boxplot.png'),
+ss_box.savefig(os.path.join(workdir, 'SCARAB.multi.absolute.MQ.param.boxplot.png'),
                dpi=300
                )
 plt.clf()

@@ -1,4 +1,4 @@
-name: saber_cenv
+name: scarab_cenv
 channels:
   - conda-forge
   - bioconda

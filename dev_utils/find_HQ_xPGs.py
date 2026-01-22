@@ -10,7 +10,7 @@ cwd_dir = "/home/ryan/Desktop/HQ_stuff"
 # parse all HQ trnascan output files
 trnascan_file_list = glob.glob(
     os.path.join(cwd_dir, 'HQ_trnascan/scratch/st-shallam-1/mcglock/'
-                          'SI60/SABer_output/SI060_*/*/*/trnascan/*.tsv'
+                          'SI60/SCARAB_output/SI060_*/*/*/trnascan/*.tsv'
                  ))
 trna_df_list = []
 for trna_file in trnascan_file_list:
@@ -88,7 +88,7 @@ trna_hq_df.to_csv(os.path.join(cwd_dir, 'trnascan_HQ_output.tsv'),
 # parse all HQ barrnap output files
 barrnap_file_list = glob.glob(
     os.path.join(cwd_dir, 'HQ_barrnap/scratch/st-shallam-1/mcglock/'
-                          'SI60/SABer_output/SI060_*/*/*/barrnap/*.gff'
+                          'SI60/SCARAB_output/SI060_*/*/*/barrnap/*.gff'
                  ))
 bar_df_list = []
 for bar_file in barrnap_file_list:

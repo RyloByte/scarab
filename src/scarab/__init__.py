@@ -1,5 +1,5 @@
 #! /usr/bin/env python
 
 
-name = "SABer"
+name = "SCARAB"
 version = "0.0.1"

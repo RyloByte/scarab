@@ -4,10 +4,7 @@ import glob
 import hashlib
 import logging
 import os
-import re
 import shutil
-import subprocess
-import sys
 from collections import Counter
 from itertools import product, islice
 
@@ -22,103 +19,21 @@ from skbio.stats.composition import clr
 from sklearn.preprocessing import StandardScaler
 from tqdm import tqdm
 
-
-def is_exe(fpath):
-    return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+logger = logging.getLogger(__name__)
 
 
-def which(program):
-    fpath, fname = os.path.split(program)
-    if fpath:
-        if is_exe(program):
-            return program
-    else:
-        for path_element in os.environ["PATH"].split(os.pathsep):
-            path_element = path_element.strip('"')
-            exe_file = os.path.join(path_element, program)
-            if is_exe(exe_file):
-                return exe_file
-    return None
-
-
-def executable_dependency_versions(exe_dict):
-    """Function for retrieving the version numbers for each executable in exe_dict
-    :param exe_dict: A dictionary mapping names of software to the path to their executable
-    :return: A formatted string with the executable name and its respective version found"""
-    versions_dict = dict()
-    versions_string = "Software versions used:\n"
-
-    simple_v = ["prodigal"]
-    no_params = ["bwa"]
-    version_re = re.compile(r"[Vv]\d+.\d|version \d+.\d|\d\.\d\.\d")
-
-    for exe in exe_dict:
-        ##
-        # Get the help/version statement for the software
-        ##
-        versions_dict[exe] = ""
-        if exe in simple_v:
-            stdout, returncode = launch_write_command([exe_dict[exe], "-v"], True)
-        elif exe in no_params:
-            stdout, returncode = launch_write_command([exe_dict[exe]], True)
-        else:
-            logging.warning("Unknown version command for " + exe + ".\n")
-            continue
-        ##
-        # Identify the line with the version number (since often more than a single line is returned)
-        ##
-        for line in stdout.split("\n"):
-            if version_re.search(line):
-                # If a line was identified, try to get just the string with the version number
-                for word in line.split(" "):
-                    if re.search(r"\d\.\d", word):
-                        versions_dict[exe] = re.sub(r"[,:()[\]]", '', word)
-                        break
-                break
-            else:
-                pass
-        if not versions_dict[exe]:
-            logging.debug("Unable to find version for " + exe + ".\n")
-
-    ##
-    # Format the string with the versions of all software
-    ##
-    for exe in sorted(versions_dict):
-        n_spaces = 12 - len(exe)
-        versions_string += "\t" + exe + ' ' * n_spaces + versions_dict[exe] + "\n"
-
-    return versions_string
-
-
-def launch_write_command(cmd_list, just_do_it=False, collect_all=True):
-    """Wrapper function for opening subprocesses through subprocess.Popen()
-
-    :param cmd_list: A list of strings forming a complete command call
-    :param just_do_it: Always return even if the returncode isn't 0
-    :param collect_all: A flag determining whether stdout and stderr are returned
-    via stdout or just stderr is returned leaving stdout to be written to the screen
-    :return: A string with stdout and/or stderr text and the returncode of the executable"""
-    stdout = ""
-    if collect_all:
-        proc = subprocess.Popen(cmd_list,
-                                shell=False,
-                                preexec_fn=os.setsid,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.STDOUT)
-        stdout = proc.communicate()[0].decode("utf-8")
-    else:
-        proc = subprocess.Popen(cmd_list,
-                                shell=False,
-                                preexec_fn=os.setsid)
-        proc.wait()
-
-    # Ensure the command completed successfully
-    if proc.returncode != 0 and not just_do_it:
-        logging.error(cmd_list[0] + " did not complete successfully! Command used:\n" +
-                      ' '.join(cmd_list) + "\nOutput:\n" + stdout)
-        sys.exit(19)
-
-    return stdout, proc.returncode
+def progress(iterable, **kwargs):
+    """Return a tqdm iterator that respects the current logging verbosity."""
+    root_logger = logging.getLogger()
+    verbose = None
+    for handler in root_logger.handlers:
+        if type(handler) is logging.StreamHandler:
+            verbose = handler.level <= logging.DEBUG
+            break
+    if verbose is None:
+        verbose = root_logger.isEnabledFor(logging.DEBUG)
+    disable = not verbose
+    return tqdm(iterable, disable=disable, **kwargs)
 
 
 def check_out_dirs(save_path, autoopt, mode):
@@ -156,20 +71,16 @@ def check_out_dirs(save_path, autoopt, mode):
 def get_SAGs(sag_path):
     # Find the SAGs!
     if os.path.isdir(sag_path):
-        logging.info('Directory specified, looking for Trusted Contigs\n')
+        logger.info('Searching directory for trusted contigs.')
         sag_list = [os.path.join(sag_path, f) for f in
                     os.listdir(sag_path) if ((f.split('.')[-1] == 'fasta' or
                                               f.split('.')[-1] == 'fna' or
                                               f.split('.')[-1] == 'fa') and 'Sample' not in f)
                     ]
-        logging.info('Found %s Trusted Contig files in directory\n'
-                     % str(len(sag_list))
-                     )
+        logger.info('Found %s trusted contig files.', len(sag_list))
 
     elif os.path.isfile(sag_path):
-        logging.info('File specified, processing %s\n'
-                     % os.path.basename(sag_path)
-                     )
+        logger.info('Processing trusted contig file %s.', os.path.basename(sag_path))
         sag_list = [sag_path]
     else:
         pass  # TODO: add error exception for bad file path
@@ -179,8 +90,8 @@ def get_SAGs(sag_path):
 
 def build_subcontigs(seq_type, in_fasta_list, subcontig_path, max_contig_len, overlap_len, min_len):
     sub_list = []
-    logging.info('\rLoading/Building subcontigs for {}\n'.format(seq_type))
-    for in_fasta in tqdm(in_fasta_list):
+    logger.info('Loading/building subcontigs for %s.', seq_type)
+    for in_fasta in progress(in_fasta_list):
         basename = os.path.basename(in_fasta)
         samp_id = basename.rsplit('.', 1)[0]
         sub_file = os.path.join(subcontig_path, samp_id + '.subcontigs.fasta')
@@ -199,7 +110,6 @@ def build_subcontigs(seq_type, in_fasta_list, subcontig_path, max_contig_len, ov
         else:
             sub_list.append((samp_id, sub_file))
 
-    logging.info('\n')
     sub_list = tuple(sub_list)
     return sub_list
 
@@ -369,13 +279,13 @@ def runCleaner(dir_path, ptrn, skip_list=[]):
             if os.path.isfile(ent):
                 try:
                     os.remove(ent)
-                except:
-                    print("Error while deleting file : ", ent)
+                except OSError as exc:
+                    logger.warning('Failed to remove file %s: %s', ent, exc)
             elif os.path.isdir(ent):
                 try:
                     shutil.rmtree(ent)
-                except:
-                    print("Error while deleting directory : ", ent)
+                except OSError as exc:
+                    logger.warning('Failed to remove directory %s: %s', ent, exc)
 
 
 ##########################################################################
@@ -385,23 +295,26 @@ def set_clust_params(denovo_min_clust, denovo_min_samp, anchor_min_clust,
                      anchor_min_samp, nu, gamma, vr, r, s, vs, a, abund_file,
                      working_dir
                      ):
-    logging.info('Running AutoOpt to find optimal hyperparameters\n')
+    logger.info('Running AutoOpt to find optimal hyperparameters.')
     clust_match_df = calc_entropy(working_dir, [abund_file])
     autoopt_method, autoopt_setting, autoopt_params = run_param_match(working_dir, a, vr, r, s, vs)  # TODO: draw from dev_utils/param_matching.py
-    logging.info('AutoOpt method: ' + str(autoopt_method) + '\n')
-    logging.info('Parameter set: ' + autoopt_params['setting'] + '\n')
-    logging.info('\tDe Novo min_cluster_size: ' + str(autoopt_params['d_min_clust']) + '\n')
-    logging.info('\tDe Novo min_samples: ' + str(autoopt_params['d_min_samp']) + '\n')
-    logging.info('\tAnchored min_cluster_size: ' + str(autoopt_params['a_min_clust']) + '\n')
-    logging.info('\tAnchored min_samples: ' + str(autoopt_params['a_min_samp']) + '\n')
-    logging.info('\tAnchored nu: ' + str(autoopt_params['nu']) + '\n')
-    logging.info('\tAnchored gamma: ' + str(autoopt_params['gamma']) + '\n')
+    logger.info('AutoOpt method: %s', autoopt_method)
+    logger.info(
+        'AutoOpt params: setting=%s, denovo_min_clust=%s, denovo_min_samp=%s, '
+        'anchor_min_clust=%s, anchor_min_samp=%s, nu=%s, gamma=%s',
+        autoopt_params['setting'],
+        autoopt_params['d_min_clust'],
+        autoopt_params['d_min_samp'],
+        autoopt_params['a_min_clust'],
+        autoopt_params['a_min_samp'],
+        autoopt_params['nu'],
+        autoopt_params['gamma'],
+    )
 
     return autoopt_method, autoopt_setting, autoopt_params
 
 
 def entropy_cluster(ent_df):
-    logging.disable(logging.DEBUG)
     samp2type = {x: y for x, y in zip(ent_df['sample_id'], ent_df['sample_type'])}
     piv_df = ent_df.pivot(index='sample_id', columns='alpha', values='Renyi_Entropy')
     scaler = StandardScaler()
@@ -454,7 +367,6 @@ def find_best_match(piv_df, ent_umap_df):
 
 def real_best_match(piv_df, real_piv_df, real_umap_df, working_dir):
     # Closest ref sample methods
-    logging.disable(logging.DEBUG)
     r_cmpr_list = []
     for r1, row1 in real_piv_df.iterrows():
         keep_diff = [r1, '', np.inf]
@@ -470,7 +382,6 @@ def real_best_match(piv_df, real_piv_df, real_umap_df, working_dir):
 
 
 def real_cluster(clusterer, real_df, umap_fit, scale_fit):
-    logging.disable(logging.DEBUG)
     # Assign real data to clusters
     real_piv_df = real_df.pivot(index='sample_id', columns='alpha', values='Renyi_Entropy')
     scale_emb = scale_fit.transform(real_piv_df)
@@ -489,8 +400,7 @@ def real_cluster(clusterer, real_df, umap_fit, scale_fit):
 
 
 def calc_real_entrophy(mba_cov_list, working_dir):
-    logging.disable(logging.DEBUG)
-    logging.info('Calculating Renyi Entropy profile\n')
+    logger.info('Calculating Renyi entropy profile.')
     entropy_list = []
     for samp_file in mba_cov_list:
         samp_id = samp_file.split('/')[-1].rsplit('.', 1)[0]
@@ -508,7 +418,7 @@ def calc_real_entrophy(mba_cov_list, working_dir):
                                     cov_df['relative_depth'].tolist()
                                     )
         q_list = [0, 1, 2, 4, 8, 16, 32, np.inf]
-        for q in tqdm(q_list):
+        for q in progress(q_list):
             r_ent = renyi_entropy(cov_dist, q)
             entropy_list.append([samp_id, samp_label, samp_rep, q, r_ent])
     real_df = pd.DataFrame(entropy_list, columns=['sample_id', 'sample_type',
@@ -533,7 +443,6 @@ def calc_real_entrophy(mba_cov_list, working_dir):
 
 
 def remove_outliers(ent_best_df, real_merge_df, umap_fit, scale_fit):
-    logging.disable(logging.DEBUG)
     # If labeled as an outlier, take the closest match
     keep_cols = ['sample_id', 'sample_type', 'alpha', 'Renyi_Entropy', 'alpha_int',
                  'x_labels', 'u0', 'u1', 'cluster', 'probabilities', 'best_match', 'euc_d'
@@ -554,7 +463,6 @@ def remove_outliers(ent_best_df, real_merge_df, umap_fit, scale_fit):
 
 
 def calc_centroid(best_df, ren_df, real_ids, umap_fit, scale_fit):
-    logging.disable(logging.DEBUG)
     ren_piv_df = ren_df.pivot(index=['sample_id', 'cluster'], columns='alpha', values='Renyi_Entropy').reset_index()
     sample_ren_df = ren_piv_df.query('cluster == -1').drop(['cluster'], axis=1)
     sample_ren_df.set_index('sample_id', inplace=True)
@@ -590,12 +498,12 @@ def calc_centroid(best_df, ren_df, real_ids, umap_fit, scale_fit):
 def calc_entropy(working_dir, mba_cov_list):
     real_clean = os.path.join(working_dir, 'cluster_clean.tsv')
     if os.path.isfile(real_clean):
-        logging.info('Entropy profile exists, moving on...\n')
+        logger.info('Entropy profile exists; skipping recalculation.')
         real_only_df = pd.read_csv(real_clean, sep='\t', header=0)
     else:
-        logging.info('Loading Reference Renyi Entropy profiles\n')
+        logger.info('Loading reference Renyi entropy profiles.')
         ent_file = os.path.join(os.path.dirname(os.path.realpath(__file__)).rsplit('/', 1)[0],
-                                'saber/configs/entropy_table.tsv'
+                                'scarab/configs/entropy_table.tsv'
                                 )
         ent_df = pd.read_csv(ent_file, sep='\t', header=0)
         ent_results = entropy_cluster(ent_df)
@@ -624,7 +532,7 @@ def calc_entropy(working_dir, mba_cov_list):
 #####################################################################################################################################################################################################################
 def best_match_params(real_dir):
     clust_all_file = os.path.join(os.path.dirname(os.path.realpath(__file__)).rsplit('/', 1)[0],
-                                  'saber/configs/CV_clust_table.tsv'
+                                  'scarab/configs/CV_clust_table.tsv'
                                   )
     clust_all_df = pd.read_csv(clust_all_file, sep='\t', header=0)
     real_df = pd.read_csv(os.path.join(real_dir, 'cluster_clean.tsv'), sep='\t', header=0)
@@ -694,11 +602,11 @@ def best_match_params(real_dir):
 
 def best_cluster_params(real_dir, real_df):
     nc_agg_file = os.path.join(os.path.dirname(os.path.realpath(__file__)).rsplit('/', 1)[0],
-                               'saber/configs/NC_agg_params.tsv'
+                               'scarab/configs/NC_agg_params.tsv'
                                )
     nc_agg_df = pd.read_csv(nc_agg_file, sep='\t', header=0)
     mq_agg_file = os.path.join(os.path.dirname(os.path.realpath(__file__)).rsplit('/', 1)[0],
-                               'saber/configs/MQ_agg_params.tsv'
+                               'scarab/configs/MQ_agg_params.tsv'
                                )
     mq_agg_df = pd.read_csv(mq_agg_file, sep='\t', header=0)
     nc_clust_df = nc_agg_df.query("grouping == 'best_cluster'")

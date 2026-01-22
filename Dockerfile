@@ -1,5 +1,5 @@
 # declare var across stages
-ARG CONDA_ENV=saber_cenv
+ARG CONDA_ENV=scarab_cenv
 
 # FROM continuumio/miniconda3:4.12.0 as build-env
 FROM condaforge/mambaforge as build-env
@@ -7,10 +7,10 @@ FROM condaforge/mambaforge as build-env
 ### EXAMPLES ###
 
 ### Build dev branch
-# sudo docker build --network=host -t saber:master .
+# sudo docker build --network=host -t scarab:master .
 
 ### Build test branch
-# sudo docker build --build-arg git_branch=test --network=host -t saber:test .
+# sudo docker build --build-arg git_branch=test --network=host -t scarab:test .
 
 ################
 
@@ -45,8 +45,8 @@ ENV PATH=/opt/conda/envs/$CONDA_ENV/bin:$PATH
 
 # move over source code, setup entry point, and register to PATH
 COPY ./src /app/src
-COPY ./entry.sh /app/saber
-RUN chmod +x /app/saber
+COPY ./entry.sh /app/scarab
+RUN chmod +x /app/scarab
 ENV PATH=/app:$PATH
 
 # Singularity builds from docker use tini, but raises warnings

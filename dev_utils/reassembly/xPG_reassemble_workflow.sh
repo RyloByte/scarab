@@ -1,5 +1,5 @@
 #!/bin/bash
-# This script is run on the ./xpg directory created by a standard SABer analysis.
+# This script is run on the ./xpg directory created by a standard SCARAB analysis.
 # Software dependencies:
 #		minimap2
 #		samtools
@@ -9,7 +9,7 @@
 #		checkm
 #
 # Inputs:
-#		xPG.fasta - found in SABer .xpg/ output directory
+#		xPG.fasta - found in SCARAB .xpg/ output directory
 #		R1.fastq - FASTQ file of forward raw reads
 #		R2.fastq - FASTQ file of reverse raw reads
 #
@@ -32,6 +32,8 @@ xPG=$1
 FQDIR=$2
 OUTDIR=$3
 THREADS=$4
+
+ADAPTER_REF=$(ls ${HOME}/*forge*/envs/reasm/opt/bbmap-39.01-0/resources/adapters.fa)
 
 # trim file to get base name
 BASE=$(basename $xPG | rev | cut -d'.' -f2- | rev)
@@ -88,7 +90,7 @@ bbduk.sh in1=${OUTDIR}/${BASE}.mapped.1.fq.gz \
 	in2=${OUTDIR}/${BASE}.mapped.2.fq.gz \
 	out1=${OUTDIR}/${BASE}.qced.1.fq.gz \
 	out2=${OUTDIR}/${BASE}.qced.2.fq.gz \
-	ref=/home/mcglock/mambaforge/envs/reasm/opt/bbmap-39.01-0/resources/adapters.fa \
+	ref=${ADAPTER_REF} \
 	ktrim=r k=23 mink=11 hdist=1 tpe tbo \
 	qtrim=rl trimq=10 minlen=75
 

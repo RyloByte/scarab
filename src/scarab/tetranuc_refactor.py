@@ -4,9 +4,11 @@ from os.path import isfile, basename
 from os.path import join as o_join
 
 import pandas as pd
-import saber.logger as s_log
-import saber.utilities as s_utils
+import scarab.logger as s_log
+import scarab.utilities as s_utils
 from sklearn import svm
+
+logger = logging.getLogger(__name__)
 
 
 class tetra_recruiter:
@@ -24,7 +26,7 @@ class tetra_recruiter:
         self.ml_functions = {'ocsvm': self.runOCSVM, 'gmm': self.runGMM}  # will be replace with ML package
 
     def run_tetra_recruiter(self):
-        logging.info('1')
+        logger.info('Starting tetranucleotide recruitment.')
 
         # tetra files always exist
         self.mg_tetra_df, self.mg_headers = self.loadMg()
@@ -45,7 +47,7 @@ class tetra_recruiter:
         return
 
     def calcPassLists(self, sag_id, sag_subs, sag_headers):
-        logging.info('2')
+        logger.debug('Calculating pass lists for %s.', sag_id)
         sag_tetra_df = self.loadSagTetra(sag_id, sag_subs, sag_headers)
         mg_tetra_filter_df, mg_rpkm_contig_list = self.concatSagMg(sag_id)
         pass_lists = self.Train(sag_id, sag_tetra_df, mg_tetra_filter_df, mg_rpkm_contig_list)
@@ -57,7 +59,7 @@ class tetra_recruiter:
         return pass_lists
 
     def Train(self, sag_id, sag_tetra_df, mg_tetra_filter_df, mg_rpkm_contig_list):
-        logging.info('3')
+        logger.debug('Training classifiers for %s.', sag_id)
         pass_lists = dict.fromkeys(self.predictors)
         for pred_name in self.predictors:
             passed_items = self.ml_functions[pred_name](sag_id, sag_tetra_df, mg_tetra_filter_df, mg_rpkm_contig_list)
@@ -66,7 +68,7 @@ class tetra_recruiter:
         return pass_lists
 
     def runOCSVM(self, sag_id, sag_tetra_df, mg_tetra_filter_df, mg_rpkm_contig_list):
-        logging.info('4')
+        logger.debug('Running OC-SVM for %s.', sag_id)
         clf = svm.OneClassSVM()
         clf.fit(sag_tetra_df.values)
         sag_pred = clf.predict(sag_tetra_df.values)
@@ -79,12 +81,12 @@ class tetra_recruiter:
         for md_nm in svm_pass_df.index.values:
             svm_pass_list.append([sag_id, md_nm, md_nm.rsplit('_', 1)[0]])
 
-        logging.info('[SABer]: Reccruited %s subcontigs to %s with OCSVM\n' % (len(svm_pass_list), sag_id))
+        logger.info('Recruited %s subcontigs to %s with OC-SVM.', len(svm_pass_list), sag_id)
 
         return svm_pass_list
 
     def runGMM(self, sag_id, sag_tetra_df, mg_tetra_filter_df, mg_rpkm_contig_list):
-        logging.info('4')
+        logger.debug('Running GMM for %s.', sag_id)
         clf = svm.OneClassSVM()
         clf.fit(sag_tetra_df.values)
         sag_pred = clf.predict(sag_tetra_df.values)
@@ -97,14 +99,14 @@ class tetra_recruiter:
         for md_nm in svm_pass_df.index.values:
             svm_pass_list.append([sag_id, md_nm, md_nm.rsplit('_', 1)[0]])
 
-        logging.info('[SABer]: Reccruited %s subcontigs to %s with OCSVM\n' % (len(svm_pass_list), sag_id))
+        logger.info('Recruited %s subcontigs to %s with GMM.', len(svm_pass_list), sag_id)
 
         return svm_pass_list
 
         ########### Begin Helper Function #################
 
     def loadMg(self):
-        logging.info('5')
+        logger.debug('Loading metagenome tetra table.')
         if isfile(o_join(self.tra_path, self.mg_id + '.tetras.tsv')):
             mg_tetra_df = pd.read_csv(o_join(self.tra_path, self.mg_id + '.tetras.tsv'), sep='\t', index_col=0,
                                       header=0)
@@ -115,7 +117,7 @@ class tetra_recruiter:
         return mg_tetra_df, mg_headers
 
     def calcMgTetra(self):
-        logging.info('6')
+        logger.debug('Calculating metagenome tetra table.')
         mg_subcontigs = s_utils.get_seqs(mg_sub_file)  # TODO: can this be removed?
         mg_headers = tuple(mg_subcontigs.keys())
         mg_subs = tuple([r.seq for r in mg_subcontigs])
@@ -126,7 +128,7 @@ class tetra_recruiter:
         return mg_headers, mg_tetra_df
 
     def loadSag(self, sag_rec):
-        logging.info('7')
+        logger.debug('Loading SAG %s.', sag_rec[0])
         sag_id, sag_file = sag_rec
         sag_subcontigs = s_utils.get_seqs(sag_file)
         sag_headers = tuple(sag_subcontigs.keys())
@@ -136,7 +138,7 @@ class tetra_recruiter:
         return sag_id, sag_headers, sag_subs, paths
 
     def loadSagTetra(self, sag_id, sag_subs, sag_headers):
-        logging.info('8')
+        logger.debug('Loading SAG tetra table for %s.', sag_id)
         if isfile(o_join(self.tra_path, sag_id + '.tetras.tsv')):
             sag_tetra_df = pd.read_csv(o_join(tra_path, sag_id + '.tetras.tsv'),
                                        sep='\t', index_col=0, header=0)
@@ -146,7 +148,7 @@ class tetra_recruiter:
         return sag_tetra_df
 
     def calcSagTetra(self, sag_id, sag_subs, sag_headers):
-        logging.info('9')
+        logger.debug('Calculating SAG tetra table for %s.', sag_id)
         sag_tetra_df = s_utils.tetra_cnt(sag_subs)
         sag_tetra_df['contig_id'] = sag_headers
         sag_tetra_df.set_index('contig_id', inplace=True)
@@ -154,23 +156,23 @@ class tetra_recruiter:
         return sag_tetra_df
 
     def loadPassLists(self, sag_id, paths):
-        logging.info('10')
+        logger.debug('Loading pass lists for %s.', sag_id)
         pass_lists = dict.fromkeys(predictors, [])
         if all([isfile(x) for x in paths]):
-            logging.info('[SABer]: Found recruit lists. Loading  %s tetramer Hz recruit list\n' % sag_id)
+            logger.info('Found recruit lists; loading tetramer Hz recruits for %s.', sag_id)
             for pred_name in self.predictors:
                 with open(o_join(self.tra_path, sag_id + '.' + pred_name + '_recruits.tsv'), 'r') as tra_in:
                     pass_lists[pred_name] = [x.rstrip('\n').split('\t') for x in tra_in.readlines()]
         return pass_lists
 
     def concatSagMg(self, sag_id):
-        logging.info('11')
+        logger.debug('Filtering metagenome tetra table for %s.', sag_id)
         mg_rpkm_contig_list = list(self.rpkm_max_df.loc[self.rpkm_max_df['sag_id'] == sag_id]['subcontig_id'].values)
         mg_tetra_filter_df = self.mg_tetra_df.loc[self.mg_tetra_df.index.isin(mg_rpkm_contig_list)]
         return mg_tetra_filter_df, mg_rpkm_contig_list
 
     def storePassLists(self, sag_id, pass_lists):
-        logging.info('12')
+        logger.debug('Storing pass lists for %s.', sag_id)
         all_pass_dict = dict.fromkeys(self.predictors)
         for pred_name in self.predictors:
             all_pass_dict[pred_name] = pd.DataFrame(pass_lists[pred_name],
@@ -181,7 +183,7 @@ class tetra_recruiter:
             mg_max_only_df = self.updateDF(all_pass_df, pred_name)
 
     def updateDF(self, all_pass_df, pred_name):
-        logging.info('13')
+        logger.debug('Updating recruitment summary for %s.', pred_name)
         mg_tot_cnt_df = self.build_mg_tot_cnt()
         gmm_cnt_df = self.build_gmm_cnt(all_pass_df)
         df_output = gmm_cnt_df.merge(mg_tot_cnt_df, how='left', on='contig_id')
@@ -193,7 +195,7 @@ class tetra_recruiter:
         return df_output
 
     def build_mg_tot_cnt(self):
-        logging.info('14')
+        logger.debug('Building metagenome contig counts.')
         mg_contig_list = [x.rsplit('_', 1)[0] for x in self.mg_headers]
         mg_tot_cnt_df = pd.DataFrame(zip(mg_contig_list, self.mg_headers),
                                      columns=['contig_id', 'subcontig_id']).groupby(['contig_id']).count().reset_index()
@@ -201,7 +203,7 @@ class tetra_recruiter:
         return mg_tot_cnt_df
 
     def build_gmm_cnt(self, all_pass_df):
-        logging.info('15')
+        logger.debug('Building recruited contig counts.')
         gmm_cnt_df = all_pass_df.groupby(['sag_id', 'contig_id']).count().reset_index()
         gmm_cnt_df.columns = ['sag_id', 'contig_id', 'subcontig_recruits']
         return gmm_cnt_df
@@ -247,7 +249,7 @@ if __name__ == '__main__':
     sag_id = basename(sag_sub_file).rsplit('.', 2)[0]
     mg_id = basename(mg_sub_file).rsplit('.', 2)[0]
     abund_recruit_df = pd.read_csv(abund_recruit_file, header=0, sep='\t')
-    logging.info('[SABer]: Starting Tetranucleotide Recruitment Step\n')
+    logger.info('Starting tetranucleotide recruitment step.')
 
     tr = tetra_recruiter(tra_path, [[sag_id, sag_sub_file]], [mg_id, mg_sub_file],
                          abund_recruit_df, per_pass)

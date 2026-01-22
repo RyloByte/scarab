@@ -1,11 +1,9 @@
 __author__ = 'Ryan J McLaughlin'
 
-import saber.utilities as s_utils
 
-
-class SABerBase:
+class ScarabBase:
     """
-    A base class for all SABer sub-commands. It requires shared properties
+    A base class for all SCARAB sub-commands. It requires shared properties
     """
 
     def __init__(self, subcmd_name) -> None:
@@ -21,5 +19,4 @@ class SABerBase:
         return info_string
 
     def furnish_with_arguments(self, args) -> None:
-        self.executables["bwa"] = s_utils.which("bwa")
         return

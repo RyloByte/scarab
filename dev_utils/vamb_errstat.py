@@ -229,7 +229,7 @@ def runErrorAnalysis(bin_path, synsrc_path, src_metag_file,
                      ):
     ##################################################################################################
     # INPUT files
-    sag_tax_map = joinpath('/home/ryan/SABer_bench/GenQC', 'CAMI2.gen2ncbi.csv') # synsrc_path, 'genome_taxa_info.tsv')
+    sag_tax_map = joinpath('/home/ryan/SCARAB_bench/GenQC', 'CAMI2.gen2ncbi.csv') # synsrc_path, 'genome_taxa_info.tsv')
     mg_contig_map = joinpath(synsrc_path, 'gsa_mapping_pool.binning')
     src_contig_cnt = joinpath(synsrc_path, 'src_fasta.stats.tsv')
     src2id_map = joinpath(synsrc_path, 'genome_to_id.tsv')

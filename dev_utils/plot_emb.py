@@ -8,9 +8,9 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 
 
-tax_file = "/home/ryan/SABer_local/SI/QC_run/SAGs/dedupe/dedupe_mqhp.tsv"
+tax_file = "/home/ryan/SCARAB_local/SI/QC_run/SAGs/dedupe/dedupe_mqhp.tsv"
 tax_df = pd.read_csv(tax_file, sep='\t', header=0)
-xpg_file = "/home/ryan/SABer_local/SI/QC_run/SI_xPGs/dedupe/dedupe_mqhp.tsv"
+xpg_file = "/home/ryan/SCARAB_local/SI/QC_run/SI_xPGs/dedupe/dedupe_mqhp.tsv"
 xpg_df = pd.read_csv(xpg_file, sep='\t', header=0)
 xpg_list = list(xpg_df['SAG_ID'].unique())
 tax_df = tax_df.query("Genome_Id in @xpg_list")
@@ -31,7 +31,7 @@ sag2fam = {x:y for x,y in zip(tax_df['Genome_Id'], tax_df['family'])}
 sag2gen = {x:y for x,y in zip(tax_df['Genome_Id'], tax_df['genus'])}
 
 
-emb_file = '/home/ryan/SABer_local/SI/QC_run/xPGs/SI060_150m/SABer_output/majority_rule/very_strict/SI060_150m.2k.merged_emb.tsv'
+emb_file = '/home/ryan/SCARAB_local/SI/QC_run/xPGs/SI060_150m/SCARAB_output/majority_rule/very_strict/SI060_150m.2k.merged_emb.tsv'
 emb_df = pd.read_csv(emb_file, sep='\t', header=0).set_index('subcontig_id')
 
 #emb_df['contig_id'] = [x.rsplit('_', 1)[0] for x in emb_df.index]
@@ -39,14 +39,14 @@ emb_df = pd.read_csv(emb_file, sep='\t', header=0).set_index('subcontig_id')
 #print(grp_df.head())
 
 fav_list = ['AB-751_B23_AB-904', 'AB-750_M18_AB-904']
-mhr_labs = "/home/ryan/SABer_local/SI/QC_run/xPGs/SI060_150m/SABer_output/SI060_150m.2k.201.mhr_contig_recruits.tsv"
+mhr_labs = "/home/ryan/SCARAB_local/SI/QC_run/xPGs/SI060_150m/SCARAB_output/SI060_150m.2k.201.mhr_contig_recruits.tsv"
 mhr_df = pd.read_csv(mhr_labs, sep='\t', header=0)
 #mhr_df = mhr_df.query("sag_id in @fav_list & jacc_sim == 1.0")[
 mhr_df = mhr_df.query("jacc_sim == 1.0")[
 					  ['sag_id', 'q_contig_id']].drop_duplicates()
 mhr2sag = {x:y for x,y in zip(mhr_df['q_contig_id'], mhr_df['sag_id'])}
 
-clust_labs = "/home/ryan/SABer_local/SI/QC_run/xPGs/SI060_150m/SABer_output/majority_rule/very_strict/SI060_150m.2k.inter_clusters.tsv"
+clust_labs = "/home/ryan/SCARAB_local/SI/QC_run/xPGs/SI060_150m/SCARAB_output/majority_rule/very_strict/SI060_150m.2k.inter_clusters.tsv"
 clust_df = pd.read_csv(clust_labs, sep='\t', header=0)
 #clust_df = clust_df.query("best_label in @fav_list")[
 clust_df = clust_df[['best_label', 'contig_id']].drop_duplicates()
@@ -151,7 +151,7 @@ sctr = sns.scatterplot(data=cat_df.query("type != 'not_recruited'"),
 plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0)
 #plt.legend('', frameon=False)
 
-sctr.figure.savefig("/home/ryan/SABer_local/SI/QC_run/xPGs/family_cluster_umap.pdf", dpi=300, bbox_inches='tight')
+sctr.figure.savefig("/home/ryan/SCARAB_local/SI/QC_run/xPGs/family_cluster_umap.pdf", dpi=300, bbox_inches='tight')
 plt.clf()
 plt.close()
 '''
@@ -159,7 +159,7 @@ family_cmap = ['blue', 'green', 'red', 'orange', 'purple', 'brown', 'pink']
 genus_cmap = ['blue', '#1B9E77', 'red', '#66A61E', 'purple', 'brown', 'pink']
 family_list = list(cat_df['family'].unique())
 genus_list = list(cat_df['genus'].unique())
-with PdfPages("/home/ryan/SABer_local/SI/QC_run/xPGs/family_cluster_umap.pdf") as pdf_pages:
+with PdfPages("/home/ryan/SCARAB_local/SI/QC_run/xPGs/family_cluster_umap.pdf") as pdf_pages:
 	for i,f_id in enumerate(family_list):
 		if f_id != None:
 			print(f_id)
@@ -185,7 +185,7 @@ with PdfPages("/home/ryan/SABer_local/SI/QC_run/xPGs/family_cluster_umap.pdf") a
 			plt.clf()
 			plt.close()
 
-with PdfPages("/home/ryan/SABer_local/SI/QC_run/xPGs/genus_cluster_umap.pdf") as pdf_pages:
+with PdfPages("/home/ryan/SCARAB_local/SI/QC_run/xPGs/genus_cluster_umap.pdf") as pdf_pages:
 	for i,g_id in enumerate(genus_list):
 		if g_id != None:
 			print(g_id)
@@ -206,7 +206,7 @@ with PdfPages("/home/ryan/SABer_local/SI/QC_run/xPGs/genus_cluster_umap.pdf") as
 								   ).set_title(g_id)
 			plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0)
 			#plt.legend('', frameon=False)
-			png_file = "/home/ryan/SABer_local/SI/QC_run/xPGs/genus_cluster_umap_label_" + g_id + ".png"
+			png_file = "/home/ryan/SCARAB_local/SI/QC_run/xPGs/genus_cluster_umap_label_" + g_id + ".png"
 			figu.savefig(png_file, dpi=300, bbox_inches='tight')
 			pdf_pages.savefig(figu)
 			plt.clf()
@@ -270,13 +270,13 @@ sctr = sns.scatterplot(data=cat_df.query("type != 'not_recruited'"),
 plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0)
 #plt.legend('', frameon=False)
 
-sctr.figure.savefig("/home/ryan/SABer_local/SI/QC_run/xPGs/family_cluster_umap.pdf", dpi=300, bbox_inches='tight')
+sctr.figure.savefig("/home/ryan/SCARAB_local/SI/QC_run/xPGs/family_cluster_umap.pdf", dpi=300, bbox_inches='tight')
 plt.clf()
 plt.close()
 '''
 family_list = list(cat_df['family'].unique())
 genus_list = list(cat_df['genus'].unique())
-with PdfPages("/home/ryan/SABer_local/SI/QC_run/xPGs/family_cluster_umap_nolabel.pdf") as pdf_pages:
+with PdfPages("/home/ryan/SCARAB_local/SI/QC_run/xPGs/family_cluster_umap_nolabel.pdf") as pdf_pages:
 	for i,f_id in enumerate(family_list):
 		if f_id != None:
 			print(f_id)
@@ -302,7 +302,7 @@ with PdfPages("/home/ryan/SABer_local/SI/QC_run/xPGs/family_cluster_umap_nolabel
 			plt.clf()
 			plt.close()
 
-with PdfPages("/home/ryan/SABer_local/SI/QC_run/xPGs/genus_cluster_umap_nolabel.pdf") as pdf_pages:
+with PdfPages("/home/ryan/SCARAB_local/SI/QC_run/xPGs/genus_cluster_umap_nolabel.pdf") as pdf_pages:
 	for i,g_id in enumerate(genus_list):
 		if g_id != None:
 			print(g_id)
@@ -325,7 +325,7 @@ with PdfPages("/home/ryan/SABer_local/SI/QC_run/xPGs/genus_cluster_umap_nolabel.
 			#plt.legend('', frameon=False)
 
 			pdf_pages.savefig(figu)
-			png_file = "/home/ryan/SABer_local/SI/QC_run/xPGs/genus_cluster_umap_nolabel_" + g_id + ".png"
+			png_file = "/home/ryan/SCARAB_local/SI/QC_run/xPGs/genus_cluster_umap_nolabel_" + g_id + ".png"
 			figu.savefig(png_file, dpi=300, bbox_inches='tight')
 			plt.clf()
 			plt.close()

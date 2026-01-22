@@ -74,7 +74,7 @@ v3.get_label_by_id('111').set_text(venn_dict['111'])
 
 for text in v3.subset_labels:
     text.set_fontsize(8)
-plt.savefig(err_path + "SABer_strain_venn.png", bbox_inches='tight', dpi=300)
+plt.savefig(err_path + "SCARAB_strain_venn.png", bbox_inches='tight', dpi=300)
 plt.clf()
 plt.close()
 
@@ -102,7 +102,7 @@ err_file = err_path + '/All_stats_count.tsv'
 err_df = pd.read_csv(err_file, header=0, sep='\t')
 map_algo = {'synSAG': 'synSAG', 'minhash': 'MinHash', 'mbn_abund': 'MBN-Abund', 'tetra_gmm': 'GMM',
             'tetra_svm': 'OCSVM', 'tetra_iso': 'Isolation Forest', 'tetra_comb': 'Tetra Ensemble',
-            'xpg': 'SABer-xPG'
+            'xpg': 'SCARAB-xPG'
             }
 err_df['algorithm'] = [map_algo[x] for x in err_df['algorithm']]
 err_df['level'] = ['exact' if x == 'perfect' else x for x in err_df['level']]
@@ -114,7 +114,7 @@ trim_df = err_trim_df.loc[((err_trim_df['level'].isin(level_list)) &
                            (err_trim_df['statistic'].isin(stat_list))
                            )]
 trim_df['sag_id'] = [x.replace('.fasta', '') for x in trim_df['sag_id']]
-sagid_list = list(trim_df['sag_id'].loc[trim_df['algorithm'] == 'SABer-xPG'])
+sagid_list = list(trim_df['sag_id'].loc[trim_df['algorithm'] == 'SCARAB-xPG'])
 trim_df = trim_df.loc[trim_df['sag_id'].isin(sagid_list)]
 
 def myceil(x, base=5):
@@ -158,7 +158,7 @@ concat_df = pd.concat(df_list)
 g = sns.catplot(x='synSAG_score_cat', y='stage_score', hue='datatype', col='stage',
                 kind='box', col_wrap=3, aspect=2,
                 col_order=['MinHash', 'MBN-Abund', 'Isolation Forest', 'OCSVM', 'GMM',
-                           'SABer-xPG'
+                           'SCARAB-xPG'
                            ],
                 palette={'synSAG_Sensitivity': sns_colors[2], 'Sensitivity': sns_colors[1], 'Precision': sns_colors[0]},
                 data=concat_df
@@ -167,14 +167,14 @@ g = sns.catplot(x='synSAG_score_cat', y='stage_score', hue='datatype', col='stag
 [plt.setp(ax.get_xticklabels(), rotation=45) for ax in g.axes.flat]
 g.set_titles(row_template='{row_name}', col_template='{col_name}')
 
-g.savefig(err_path + '/SABer_Sensitivity_boxplot.png', bbox_inches='tight', dpi=300)
+g.savefig(err_path + '/SCARAB_Sensitivity_boxplot.png', bbox_inches='tight', dpi=300)
 plt.clf()
 plt.close()
 
 sns.set_context("poster")
 sns.set_style('whitegrid')
 sns.set(font_scale=0.75)
-stage_list = ['MinHash', 'SABer-xPG']
+stage_list = ['MinHash', 'SCARAB-xPG']
 sens_trim_df = sensitivity_df.loc[sensitivity_df['stage'].isin(stage_list)]
 g = sns.relplot(x='stage', y='stage_score', hue='synSAG_score_cat', style='synSAG_score_cat',
                 kind='line', ci=95, data=sens_trim_df, palette='muted'
@@ -184,12 +184,12 @@ plt.ylim(0, 100)
 [plt.setp(ax.get_xticklabels(), rotation=45) for ax in g.axes.flat]
 g.set_titles(row_template='{row_name}', col_template='{col_name}')
 
-g.savefig(err_path + '/SABer_MinHash_relplot.png', bbox_inches='tight', dpi=300)
+g.savefig(err_path + '/SCARAB_MinHash_relplot.png', bbox_inches='tight', dpi=300)
 plt.clf()
 plt.close()
 paired_cols = sns.color_palette("Paired")
 for algo in set(syn_stage_sense_df['stage']):
-    # Plot Before and after SAG -> SABer-xPG completness
+    # Plot Before and after SAG -> SCARAB-xPG completness
     algo_list = ['synSAG', algo]
     sub_trim_df = syn_stage_sense_df.loc[syn_stage_sense_df['stage'].isin(algo_list)]
     sub_trim_df = sub_trim_df.loc[sub_trim_df['synSAG_score'] <= 50.0]
@@ -219,7 +219,7 @@ for algo in set(syn_stage_sense_df['stage']):
     plt.close()
 
 for algo in set(syn_stage_precis_df['stage']):
-    # Plot Before and after SAG -> SABer-xPG completness
+    # Plot Before and after SAG -> SCARAB-xPG completness
     algo_list = ['synSAG', algo]
     sub_trim_df = syn_stage_precis_df.loc[syn_stage_precis_df['stage'].isin(algo_list)]
     sns.set_context("poster")
@@ -346,7 +346,7 @@ for algo in set(err_trim_df['algorithm']):
 
     # plt.ylim(0, 1)
     # plt.xlim(-0.5, 4.5)
-    plt.title('SABer ' + algo + ' by Taxonomic-level')
+    plt.title('SCARAB ' + algo + ' by Taxonomic-level')
 
     plt.savefig(err_path + '/multi-level/' + algo.replace(' ', '_') + '_multi-level_boxplox_count.png',
                 bbox_inches='tight'
@@ -357,13 +357,13 @@ for algo in set(err_trim_df['algorithm']):
 # Stat by level line plot
 err_deduped_df = err_trim_df.loc[err_trim_df['algorithm'].isin(['GMM', 'OCSVM',
                                                                 'Isolation Forest',
-                                                                'Tetra Ensemble', 'SABer-xPG'])
+                                                                'Tetra Ensemble', 'SCARAB-xPG'])
 ]
 
 sns.set(font_scale=1.5)  # crazy big
 g = sns.relplot(x='level', y='score', hue='statistic', style='statistic',
                 col='algorithm', kind='line', col_wrap=5,
-                col_order=['Isolation Forest', 'OCSVM', 'GMM', 'Tetra Ensemble', 'SABer-xPG'],
+                col_order=['Isolation Forest', 'OCSVM', 'GMM', 'Tetra Ensemble', 'SCARAB-xPG'],
                 sort=False,
                 data=err_deduped_df
                 )
@@ -371,14 +371,14 @@ g = sns.relplot(x='level', y='score', hue='statistic', style='statistic',
 [plt.setp(ax.get_xticklabels(), rotation=45) for ax in g.axes.flat]
 g.set_titles(row_template='{row_name}', col_template='{col_name}')
 
-g.savefig(err_path + '/SABer_relplot.png', bbox_inches='tight', dpi=300)
+g.savefig(err_path + '/SCARAB_relplot.png', bbox_inches='tight', dpi=300)
 plt.clf()
 plt.close()
 
 g = sns.relplot(x='level', y='score', hue='statistic', style='statistic',
                 col='algorithm', kind='line', col_wrap=3, ci=95,
                 col_order=['MinHash', 'MBN-Abund', 'Isolation Forest', 'OCSVM', 'GMM',
-                           'SABer-xPG'],
+                           'SCARAB-xPG'],
                 sort=False,
                 data=err_trim_df
                 )
@@ -388,15 +388,15 @@ plt.ylim(0, 1)
 [plt.setp(ax.get_xticklabels(), rotation=45) for ax in g.axes.flat]
 g.set_titles(row_template='{row_name}', col_template='{col_name}')
 
-g.savefig(err_path + '/SABer_AllSteps_relplot.png', bbox_inches='tight', dpi=300)
+g.savefig(err_path + '/SCARAB_AllSteps_relplot.png', bbox_inches='tight', dpi=300)
 plt.clf()
 plt.close()
 
 # Open SAG ID to AMBER map
-s2a_map_file = err_path + '/SABer2AMBER_map.tsv'
+s2a_map_file = err_path + '/SCARAB2AMBER_map.tsv'
 s2a_map_df = pd.read_csv(s2a_map_file, header=0, sep='\t')
 s2a_map_df['sag_id'] = [x.rsplit('.', 1)[0] for x in s2a_map_df['sag_id']]
-deduped_df = unstack_df.loc[unstack_df['algorithm'].isin(['Isolation Forest', 'OCSVM', 'GMM', 'SABer-xPG'])]
+deduped_df = unstack_df.loc[unstack_df['algorithm'].isin(['Isolation Forest', 'OCSVM', 'GMM', 'SCARAB-xPG'])]
 
 deduped_df['synthSAG_id'] = deduped_df['sag_id']
 deduped_df['sag_id'] = [x.rsplit('.', 2)[0] for x in deduped_df['sag_id']]
@@ -445,12 +445,12 @@ color_dict = {'Binsanity-wf_0.2.5.9': paired_cmap_dict['rose'],
               'MetaBAT_CAMI': paired_cmap_dict['green'],
               'Metawatt_3.5_CAMI': paired_cmap_dict['brown'],
               'MyCC_CAMI': paired_cmap_dict['gray'],
-              'SABer-xPG': paired_cmap_dict['orange']
+              'SCARAB-xPG': paired_cmap_dict['orange']
               }
 marker_dict = {'MaxBin_2.0.2_CAMI': 'o', 'MetaBAT_CAMI': 'o',
                'MaxBin_2.2.4': 'd', 'CONCOCT_2': 'o',
                'Binsanity_0.2.5.9': 'o', 'Binsanity-wf_0.2.5.9': 'd',
-               'SABer-xPG': 's', 'COCACOLA': 'o', 'Metawatt_3.5_CAMI': 'o',
+               'SCARAB-xPG': 's', 'COCACOLA': 'o', 'Metawatt_3.5_CAMI': 'o',
                'CONCOCT_CAMI': 'd',
                'MyCC_CAMI': 'o', 'DAS_Tool_1.1': 'd',
                'MetaBAT_2.11.2': 'd'
@@ -458,7 +458,7 @@ marker_dict = {'MaxBin_2.0.2_CAMI': 'o', 'MetaBAT_CAMI': 'o',
 cat_order = ['Binsanity-wf_0.2.5.9', 'Binsanity_0.2.5.9', 'COCACOLA', 'CONCOCT_2',
              'CONCOCT_CAMI', 'DAS_Tool_1.1', 'MaxBin_2.0.2_CAMI', 'MaxBin_2.2.4',
              'MetaBAT_2.11.2', 'MetaBAT_CAMI', 'Metawatt_3.5_CAMI', 'MyCC_CAMI',
-             'SABer-xPG'
+             'SCARAB-xPG'
              ]
 filter_sab_amb_df['Precision'] = filter_sab_amb_df['Precision'] * 100
 filter_sab_amb_df['Sensitivity'] = filter_sab_amb_df['Sensitivity'] * 100
@@ -475,7 +475,7 @@ plt.xlim(0, 100)
 plt.ylim(0, 105)
 
 plt.legend(edgecolor='b', bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-g.figure.savefig(err_path + '/AMBER_SABer_scatterplot.png', bbox_inches='tight', dpi=300)
+g.figure.savefig(err_path + '/AMBER_SCARAB_scatterplot.png', bbox_inches='tight', dpi=300)
 
 flierprops = dict(markerfacecolor='0.75', markersize=5, markeredgecolor='w',
                   linestyle='none')
@@ -486,7 +486,7 @@ piv_sab_amb_df.columns = ['bin_id', 'algorithm', 'genome_id', 'statistic', 'scor
 cat_order = ['Binsanity-wf_0.2.5.9', 'Binsanity_0.2.5.9', 'COCACOLA', 'CONCOCT_2',
              'CONCOCT_CAMI', 'DAS_Tool_1.1', 'MaxBin_2.0.2_CAMI', 'MaxBin_2.2.4',
              'MetaBAT_2.11.2', 'MetaBAT_CAMI', 'Metawatt_3.5_CAMI', 'MyCC_CAMI',
-             'Isolation Forest', 'OCSVM', 'GMM', 'SABer-xPG'
+             'Isolation Forest', 'OCSVM', 'GMM', 'SCARAB-xPG'
              ]
 with sns.axes_style("white"):
     ax = sns.catplot(x="statistic", y="score", hue='algorithm', kind='box',
@@ -500,6 +500,6 @@ with sns.axes_style("white"):
     plt.xlim(-0.5, 1.5)
     # plt.title('SAG-plus CAMI-1-High error analysis')
     ax._legend.set_title('Workflow\nStage')
-    plt.savefig(err_path + '/AMBER_SABer_error_boxplox_count.png', bbox_inches='tight', dpi=300)
+    plt.savefig(err_path + '/AMBER_SCARAB_error_boxplox_count.png', bbox_inches='tight', dpi=300)
     plt.clf()
     plt.close()

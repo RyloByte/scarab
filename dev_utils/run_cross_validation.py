@@ -5,14 +5,14 @@ import sys
 
 import pandas as pd
 
-sys.path.append('/home/ryan/dev/SABer')
-sys.path.append('/home/ryan/dev/SABer/src')
-sys.path.append('/home/ryan/dev/SABer/src/saber')
-import src.saber.abundance_recruiter as abr
-import src.saber.clusterer as clst
-import src.saber.minhash_recruiter as mhr
-import src.saber.tetranuc_recruiter as tra
-import saber_errstat as err
+sys.path.append('/home/ryan/dev/SCARAB')
+sys.path.append('/home/ryan/dev/SCARAB/src')
+sys.path.append('/home/ryan/dev/SCARAB/src/scarab')
+import src.scarab.abundance_recruiter as abr
+import src.scarab.clusterer as clst
+import src.scarab.minhash_recruiter as mhr
+import src.scarab.tetranuc_recruiter as tra
+import scarab_errstat as err
 
 # This script is for running CV for HDBSCAN and OCSVM
 # Expects that you have already pre-run the samples to create the

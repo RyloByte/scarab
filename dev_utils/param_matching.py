@@ -412,7 +412,7 @@ def run_param_match(working_dir, real_dir):
 
 ############################################################################################
 ref_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                       'renyi_entropy/SABer_CV/'
+                       'renyi_entropy/SCARAB_CV/'
                        )
 real_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                         'renyi_entropy/SI/'

@@ -9,28 +9,30 @@ pd.set_option('display.max_columns', None)
 pd.options.mode.chained_assignment = None
 from sklearn.preprocessing import StandardScaler
 import sys
-import saber.utilities as s_utils
+import scarab.utilities as s_utils
+
+logger = logging.getLogger(__name__)
 
 
 def runAbundRecruiter(subcontig_path, abr_path, mg_sub_file, mg_raw_file_list,
                       pacbio, nthreads
                       ):
-    logging.info('Starting Abundance Data Transformation\n')
+    logger.info('Starting abundance data transformation.')
     mg_id = mg_sub_file[0]
 
     if isfile(o_join(abr_path, mg_id + '.coverage.scaled.tsv')):
-        logging.info('Loading Abundance matrix for %s\n' % mg_id)
+        logger.info('Loading abundance matrix for %s.', mg_id)
         mg_scale_out = o_join(abr_path, mg_id + '.coverage.scaled.tsv')
         mg_covm_out = o_join(abr_path, mg_id + '.mbacov.tsv')
     else:
-        logging.info('Building %s abundance matrix\n' % mg_id)
+        logger.info('Building abundance matrix for %s.', mg_id)
         mg_sub_path = o_join(subcontig_path, mg_id + '.subcontigs.fasta')
         # Process raw metagenomes to calculate abundances
         mg_scale_out, mg_covm_out = procMetaGs(abr_path, mg_id, mg_raw_file_list,
                                                subcontig_path, pacbio, nthreads
                                                )
     # Clean up the directory
-    logging.info('Cleaning up intermediate files...\n')
+    logger.info('Cleaning up intermediate files.')
     for s in ["*.sam", "*.bam", "*.stderr.txt", "*.stdout.txt"]:
         s_utils.runCleaner(abr_path, s)
 
@@ -53,13 +55,12 @@ def procMetaGs(abr_path, mg_id, mg_raw_file_list, subcontig_path, pacbio, nthrea
         mg_sort_out = runSamTools(abr_path, pe_id, nthreads, mg_id, mg_sam_out)
         sorted_bam_list.append(mg_sort_out)
         # Clean up intermediates
-        logging.info('Cleaning up intermediate files...\n')
+        logger.debug('Cleaning up intermediate files.')
         for s in ["*.sam", "*.bam", "*.stderr.txt", "*.stdout.txt"]:
             s_utils.runCleaner(abr_path, s, skip_list=sorted_bam_list)
 
 
 
-    logging.info('\n')
     mg_scale_out, mg_covm_out = runMBAcov(abr_path, mg_id, sorted_bam_list)
     # mg_covm_out = runCovM(abr_path, mg_id, nthreads, sorted_bam_list)
     # mg_covm_out = runSAMSAM(abr_path, subcontig_path, mg_id, sam_list, nthreads)
@@ -78,33 +79,33 @@ def runMiniMap2(abr_path, subcontig_path, mg_id, raw_file_list, pacbio, nthreads
         except:  # if file doesn't exist
             sam_size = -1
         if len(raw_file_list) == 2:
-            logging.info('Raw reads in FWD and REV file...\n')
+            logger.debug('Detected paired-end reads.')
             pe2 = raw_file_list[1]
             mem_cmd = ['minimap2', '-ax', 'sr', '--split-prefix=tmp', '-t', str(nthreads), '-o', mg_sam_out,
                        o_join(subcontig_path, mg_id + '.subcontigs.fasta'), pe1, pe2
                        ]
         elif ((len(raw_file_list) < 2) & (pacbio == True)):
-            logging.info('Raw reads are PacBio Hifi...\n')
+            logger.debug('Detected PacBio HiFi reads.')
             mem_cmd = ['minimap2', '-ax', 'map-hifi', '--split-prefix=tmp', '-t', str(nthreads), '-o', mg_sam_out,
                        o_join(subcontig_path, mg_id + '.subcontigs.fasta'), pe1
                        ]
         else:  # if the fastq is interleaved
-            logging.info('Raw reads in interleaved file...\n')
+            logger.debug('Detected interleaved reads.')
             mem_cmd = ['minimap2', '-ax', 'sr', '--split-prefix=tmp', '-t', str(nthreads), '-o', mg_sam_out,
                        o_join(subcontig_path, mg_id + '.subcontigs.fasta'), pe1
                        ]
 
         if sam_size <= 0:
-            logging.info('Running minimap2 on %s\n' % pe_id)
+            logger.info('Running minimap2 on %s.', pe_id)
             with open(mg_sam_out, 'w') as sam_file:
                 with open(o_join(abr_path, pe_id + '.stderr.txt'), 'w') as stderr_file:
                     with open(o_join(abr_path, pe_id + '.stdout.txt'), 'w') as stdout_file:
                         run_mem = Popen(mem_cmd, stdout=stdout_file, stderr=stderr_file)
                         run_mem.communicate()
         else:
-            logging.info('SAM file already exists, skipping alignment...')
+            logger.info('SAM file exists; skipping alignment.')
     else:
-        logging.info('Raw FASTQ file(s) are not where you said they were...')
+        logger.error('Raw FASTQ file(s) not found.')
         sys.exit()  # TODO: replace this quick-fix with a real exception
 
     return pe_id, mg_sam_out
@@ -113,7 +114,7 @@ def runMiniMap2(abr_path, subcontig_path, mg_id, raw_file_list, pacbio, nthreads
 def runSamTools(abr_path, pe_id, nthreads, mg_id, mg_sam_out):
     mg_bam_out = o_join(abr_path, pe_id + '.bam')
     if isfile(mg_bam_out) == False:
-        logging.info('Converting SAM to BAM with SamTools\n')
+        logger.info('Converting SAM to BAM with samtools.')
         bam_cmd = ['samtools', 'view', '-S', '-b', '-@', str(nthreads), mg_sam_out]
         with open(mg_bam_out, 'w') as bam_file:
             with open(o_join(abr_path, mg_id + '.stderr.txt'), 'w') as stderr_file:
@@ -122,7 +123,7 @@ def runSamTools(abr_path, pe_id, nthreads, mg_id, mg_sam_out):
     # sort bam file
     mg_sort_out = o_join(abr_path, pe_id + '.sorted.bam')
     if isfile(mg_sort_out) == False:
-        logging.info('Sort BAM with SamTools\n')
+        logger.info('Sorting BAM with samtools.')
         sort_cmd = ['samtools', 'sort', '-@', str(nthreads), mg_bam_out, '-o', mg_sort_out]
         with open(o_join(abr_path, mg_id + '.stderr.txt'), 'w') as stderr_file:
             run_sort = Popen(sort_cmd, stderr=stderr_file)
@@ -140,7 +141,7 @@ def runMBAcov(abr_path, mg_id, sorted_bam_list):
     except:  # if file doesn't exist
         mba_size = -1
     if mba_size <= 0:
-        logging.info('Calculating Coverage with jgi_summarize_bam_contig_depths\n')
+        logger.info('Calculating coverage with jgi_summarize_bam_contig_depths.')
         mba_cmd = ['jgi_summarize_bam_contig_depths', '--outputDepth', mg_mba_out]
         mba_cmd.extend(sorted_bam_list)
         with open(o_join(abr_path, mg_id + '.stderr.txt'), 'w') as stderr_file:

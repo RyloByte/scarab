@@ -1,21 +1,23 @@
 __author__ = 'Ryan J McLaughlin'
 
 """
-SABer command line.
+SCARAB command line.
 """
 import argparse
 import logging
 import sys
 import warnings
 warnings.filterwarnings('ignore')
-from saber.commands import (info, recruit)
+from scarab.commands import (info, recruit)
+
+logger = logging.getLogger(__name__)
 
 usage = """
-saber <command> [<args>]
+scarab <command> [<args>]
 ** Commands include:
 recruit        Recruit environmental reads to reference SAG(s).
 ** Other commands:
-info           Display SABer version and other information.
+info           Display SCARAB version and other information.
 help           Return this message.
 Use '-h' to get subcommand-specific help, e.g.
 """
@@ -38,13 +40,13 @@ def main():
         sys.exit(1)
 
     elif args.command not in commands:
-        logging.error('Unrecognized command')
+        logger.error('Unrecognized command')
         sys.stderr.write(usage)
         sys.exit(1)
 
     cmd = commands.get(args.command)
     cmd(sys.argv[2:])
-    logging.info("SABer has finished successfully.\n")
+    logger.info('SCARAB has finished successfully.')
 
 
 if __name__ == '__main__':

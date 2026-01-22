@@ -31,9 +31,9 @@ DESTDIR ?= /usr/local
 PYTHON ?= python3
 
 ### Conda + pip install
-install-saberenv: #installs SABer deps with conda + pip
+install-scarabenv: #installs SCARAB deps with conda + pip
 	conda env create -f environment.yml
-install-saber: # installs saber with pip
+install-scarab: # installs scarab with pip
 	pip install .
 
 ### Container Automation
@@ -47,7 +47,7 @@ docker-build: #pre-docker-builds
 		|| git_branch=$$(git describe --tags)
 	sudo docker build --network=host \
 			--build-arg git_branch=$$git_branch \
-			-t quay.io/hallamlab/saber:$$git_branch .
+			-t quay.io/hallamlab/scarab:$$git_branch .
 
 docker-run:
 	git_branch=$$(git symbolic-ref --short -q HEAD) \
@@ -55,11 +55,10 @@ docker-run:
 	sudo docker run -it --network=host --rm \
 		-v $(CURDIR):/input \
 		-v $(CURDIR)/out:/output \
-		quay.io/hallamlab/saber:$$git_branch bash 
+		quay.io/hallamlab/scarab:$$git_branch bash 
 
 singularity-local-build:
 	git_branch=$$(git symbolic-ref --short -q HEAD) \
 		|| git_branch=$$(git describe --tags)
-	sudo /usr/local/bin/singularity build saber-$$git_branch.sif \
-		docker-daemon://quay.io/hallamlab/saber:$$git_branch
-
+	sudo /usr/local/bin/singularity build scarab-$$git_branch.sif \
+		docker-daemon://quay.io/hallamlab/scarab:$$git_branch

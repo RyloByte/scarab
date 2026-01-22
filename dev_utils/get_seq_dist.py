@@ -9,7 +9,7 @@ import warnings
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import saber.utilities as s_utils
+import scarab.utilities as s_utils
 import scipy.stats as st
 import seaborn as sns
 from scipy import interpolate

@@ -1,13 +1,13 @@
 import os
 import sys
 
-sys.path.append('/home/ryan/dev/SABer')
-sys.path.append('/home/ryan/dev/SABer/src')
-sys.path.append('/home/ryan/dev/SABer/src/saber')
+sys.path.append('/home/ryan/dev/SCARAB')
+sys.path.append('/home/ryan/dev/SCARAB/src')
+sys.path.append('/home/ryan/dev/SCARAB/src/scarab')
 import vamb_errstat
-import saber_errstat
+import scarab_errstat
 import unitem_errstat
-import saber_LR_errstat
+import scarab_LR_errstat
 
 # Input files directory
 working_dir = sys.argv[1]
@@ -20,10 +20,10 @@ params = sys.argv[7]
 binner = sys.argv[8]
 threads = int(sys.argv[9])
 
-# SABer errstat
-if binner == 'SABer':
+# SCARAB errstat
+if binner == 'SCARAB':
     mockpath = os.path.join(synthdata_dir, 'Final_SAGs_20k_test_subset/' + str(sample) + '/')
-    run_err_df = saber_errstat.runErrorAnalysis(working_dir, synthdata_dir, mg_asm,
+    run_err_df = scarab_errstat.runErrorAnalysis(working_dir, synthdata_dir, mg_asm,
                                                 mockpath, sample_type, sample, mode, params,
                                                 threads)
     run_err_df.to_csv(os.path.join(working_dir, 'Bin.errstat.tsv'), sep='\t', index=False)
@@ -44,9 +44,9 @@ if binner == 'UNITEM':
     print(binner)
     print(run_err_df)
 
-if binner == 'SABer_LR':
+if binner == 'SCARAB_LR':
     mockpath = os.path.join(synthdata_dir, 'Final_SAGs_20k_test_subset/' + str(sample) + '/')
-    run_err_df = saber_LR_errstat.runErrorAnalysis(working_dir, synthdata_dir, mg_asm,
+    run_err_df = scarab_LR_errstat.runErrorAnalysis(working_dir, synthdata_dir, mg_asm,
                                                 mockpath, sample_type, sample, mode, params,
                                                 threads)
     run_err_df.to_csv(os.path.join(working_dir, 'Bin.errstat.tsv'), sep='\t', index=False)

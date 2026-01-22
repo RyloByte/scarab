@@ -28,7 +28,6 @@ dependencies:
   - brotli=1.0.9=h166bdaf_8
   - brotli-bin=1.0.9=h166bdaf_8
   - brotlipy=0.7.0=py310h5764c6d_1005
-  - bwa=0.7.17=h7132678_9
   - bwidget=1.9.14=ha770c72_1
   - bzip2=1.0.8=h7f98852_4
   - c-ares=1.18.1=h7f98852_0

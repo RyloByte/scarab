@@ -5,17 +5,18 @@ from os.path import join as o_join
 
 import numpy as np
 import pandas as pd
-from tqdm import tqdm
 import sourmash
 from sourmash.sbtmh import SigLeaf
 
-import saber.utilities as s_utils
+import scarab.utilities as s_utils
 
 pd.set_option('display.max_columns', None)
 
+logger = logging.getLogger(__name__)
+
 
 def run_minhash_recruiter(sig_path, mhr_path, sag_sub_files, mg_sub_file, nthreads, min_len, kmer_size):
-    logging.info('Starting MinHash Recruitment\n')
+    logger.info('Starting MinHash recruitment.')
     # Calculate/Load MinHash Signatures with SourMash for MG subseqs
     mg_id = mg_sub_file[0]
     kmer_list = [kmer_size]
@@ -32,20 +33,15 @@ def run_minhash_recruiter(sig_path, mhr_path, sag_sub_files, mg_sub_file, nthrea
                 chunk_list = [list(x) for x in np.array_split(np.array(list(sag_sig_dict.keys())),
                                                               nthreads * 10) if len(list(x)) != 0
                               ]  # TODO: might be a better way to chunk up the list?
-                logging.info('Built {} Blocks of Trusted Contigs Signature Sets\n'.format(len(chunk_list)))
+                logger.debug('Built %s trusted contig signature blocks.', len(chunk_list))
                 arg_list = []
                 for i, sag_id_list in enumerate(chunk_list):
                     sub_sag_sig_dict = {k: sag_sig_dict[k] for k in sag_id_list}
                     arg_list.append([sbt_args, mhr_path, sag_id_list, sub_sag_sig_dict, kmer, min_len])
                 results = pool.imap_unordered(compare_sag_sbt, arg_list)
-                logging.info('Querying {} Signature Blocks against SBT\n'.format(len(chunk_list)))
-                logging.info('WARNING: This can be VERY time consuming, '
-                             'be patient\n'.format(len(chunk_list))
-                             )
-                df_cnt = 0
-                logging.info('Signatures Queried Against SBT:\n')
-                for search_df in tqdm(results):
-                    df_cnt += len(search_df)
+                logger.info('Querying %s signature blocks against the SBT.', len(chunk_list))
+                logger.warning('This step can be time consuming for large signature sets.')
+                for search_df in s_utils.progress(results):
                     minhash_pass_list.extend(search_df)
                 pool.close()
                 pool.join()
@@ -59,14 +55,14 @@ def run_minhash_recruiter(sig_path, mhr_path, sag_sub_files, mg_sub_file, nthrea
             minhash_recruit_df = minhash_df.copy()
             minhash_recruit_df.to_csv(mh_recruit_file, sep='\t', index=False)
         else:
-            logging.info('MinHash already done\n')
+            logger.info('MinHash recruits already exist; skipping.')
         mh_recruit_df = pd.read_csv(mh_recruit_file, header=0, sep='\t')
         mh_kmer_recruits_dict[kmer] = mh_recruit_df
-    logging.info('Cleaning up intermediate files...\n')
+    logger.info('Cleaning up intermediate files.')
     for s in ["*.sig", "*.mhr_recruits.tsv", "*.sbt.zip"]:
         s_utils.runCleaner(mhr_path, s)
 
-    logging.info('MinHash Recruitment Algorithm Complete\n')
+    logger.info('MinHash recruitment complete.')
     return mh_kmer_recruits_dict
 
 
@@ -78,8 +74,8 @@ def build_sag_sig_dict(build_list, nthreads, sig_path, kmer):
         arg_list.append([sag_file, sag_id, sig_path, kmer])
     results = pool.imap_unordered(load_sag_sigs, arg_list)
     sag_sig_dict = {}
-    logging.info('Loading/Building Trusted Contig Signatures:\n')
-    for sag_sig_rec in tqdm(results):
+    logger.info('Loading/building trusted contig signatures.')
+    for sag_sig_rec in s_utils.progress(results):
         sag_id, sag_sig_list = sag_sig_rec
         sag_sig_dict[sag_id] = sag_sig_list
     pool.close()
@@ -121,23 +117,23 @@ def build_mg_sbt(mg_id, mg_sub_file, sig_path, nthreads, kmer, min_len, checkonl
     mg_sbt_file = o_join(sig_path, mg_id + '.' + str(kmer) + '.sbt.zip')
     if isfile(mg_sbt_file):
         if checkonly is True:
-            logging.info('%s Sequence Bloom Tree Exists\n' % mg_id)
+            logger.info('%s sequence bloom tree exists.', mg_id)
             mg_sbt_tree = True
         else:
             mg_sbt_tree = sourmash.load_sbt_index(mg_sbt_file)
     else:
-        logging.info('Building %s Sequence Bloom Tree\n' % mg_id)  # TODO: perhaps multiple smaller SBTs would be better
+        logger.info('Building sequence bloom tree for %s.', mg_id)
         mg_sig_list = load_mg_sigs(mg_id, mg_sub_file, nthreads, sig_path, kmer, min_len)
         mg_sbt_tree = sourmash.create_sbt_index()
         pool = multiprocessing.Pool(processes=nthreads)
         results = pool.imap_unordered(build_leaf, mg_sig_list)
         leaf_list = []
-        logging.info('Building leaves for SBT:\n')
-        for leaf in tqdm(results):
+        logger.debug('Building SBT leaves.')
+        for leaf in s_utils.progress(results):
             leaf_list.append(leaf)
         leaf_list = tuple(leaf_list)
-        logging.info('Adding leaves to tree:\n')
-        for lef in tqdm(leaf_list):
+        logger.debug('Adding leaves to SBT.')
+        for lef in s_utils.progress(leaf_list):
             mg_sbt_tree.add_node(lef)
         mg_sbt_tree.save(mg_sbt_file)
         pool.close()
@@ -154,12 +150,12 @@ def build_leaf(sig):
 
 def load_mg_sigs(mg_id, mg_sub_file, nthreads, sig_path, kmer, min_len):
     if isfile(o_join(sig_path, mg_id + '.' + str(kmer) + '.metaG.sig')):
-        logging.info('Loading %s Signatures\n' % mg_id)
+        logger.info('Loading signatures for %s.', mg_id)
         mg_sig_list = tuple(sourmash.signature.load_signatures(o_join(sig_path, mg_id + \
                                                                       '.' + str(kmer) + '.metaG.sig')
                                                                ))
     else:
-        logging.info('Loading subcontigs for %s\n' % mg_id)
+        logger.info('Loading subcontigs for %s.', mg_id)
         mg_subcontigs = s_utils.get_seqs(mg_sub_file[1])
         mg_sig_list = build_mg_sigs(mg_id, mg_subcontigs, nthreads, sig_path, kmer, min_len)
     return mg_sig_list
@@ -196,8 +192,8 @@ def build_mg_sigs(mg_id, mg_subcontigs, nthreads, sig_path, kmer, min_len):
     pool = multiprocessing.Pool(processes=nthreads)
     results = pool.imap_unordered(build_signature, arg_list)
     mg_sig_list = []
-    logging.info('Building MinHash Signatures for metagenome contigs:\n')
-    for mg_sig in tqdm(results):
+    logger.info('Building MinHash signatures for metagenome contigs.')
+    for mg_sig in s_utils.progress(results):
         mg_sig_list.append(mg_sig)
     pool.close()
     pool.join()
@@ -213,8 +209,8 @@ def sag_recruit_checker(mhr_path, sag_sub_files, kmer):
     minhash_pass_list = []
     l = 0
     b = 0
-    logging.info('Checking for previously completed Trusted Contigs:\n')
-    for sag_rec in tqdm(sag_sub_files):
+    logger.info('Checking for previously completed trusted contigs.')
+    for sag_rec in s_utils.progress(sag_sub_files):
         sag_id, sag_file = sag_rec
         mh_file = o_join(mhr_path, sag_id + '.' + str(kmer) + '.mhr_recruits.tsv')
         if isfile(mh_file):

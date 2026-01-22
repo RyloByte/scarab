@@ -1,0 +1,10 @@
+numpy
+pandas
+scikit-learn
+umap-learn
+hdbscan
+sourmash
+pyfastx
+dit
+scikit-bio
+tqdm
