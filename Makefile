@@ -10,7 +10,7 @@ ENV_FILE ?= environment.yml
 ENV_NAME ?= scarab_cenv
 TEST_ENV ?= scarab_test
 PYTHON ?= python3
-PY_VER ?= 3.11
+PY_VER ?= 3.10
 PKG_NAME ?= scarab
 RECIPE_LOCAL ?= conda-recipe-local
 RECIPE_RELEASE ?= conda-recipe
@@ -20,8 +20,10 @@ IMAGE_TAG ?= $(subst /,-,$(GIT_REF))
 DOCKER ?= docker
 DOCKER_SUDO ?= sudo
 APPTAINER ?= apptainer
-CONDA_BASE ?= $(shell $(CONDA) info --base 2>/dev/null)
-CONDA_BLD_DIR ?= $(CONDA_BASE)/conda-bld
+CONDA_BASE ?= $(shell conda info --base 2>/dev/null)
+CONDA_BLD_PATH ?= $(CONDA_BASE)/conda-bld
+BUILD_ENV ?= build-tools
+CONDA_RUN ?= conda run -n $(BUILD_ENV)
 ANACONDA_USER ?=
 
 .PHONY: help
@@ -50,11 +52,19 @@ env-remove: ## Remove the conda environment
 
 .PHONY: conda-build-local
 conda-build-local: ## Build from local sources using conda-recipe-local
-	$(CONDA_BUILD) build --python $(PY_VER) $(RECIPE_LOCAL)
+	CONDA_BLD_PATH="$(CONDA_BLD_PATH)" $(CONDA_BUILD) build --python $(PY_VER) $(RECIPE_LOCAL)
+	$(MAKE) conda-index
+
+
+.PHONY: conda-mambabuild-local
+conda-mambabuild-local: ## Build locally with conda-mambabuild (boa)
+	CONDA_BLD_PATH="$(CONDA_BLD_PATH)" $(CONDA_RUN) conda-mambabuild $(CONDA_CHANNELS) --python $(PY_VER) $(RECIPE_LOCAL)
+	$(MAKE) conda-index
 
 .PHONY: conda-build-release
 conda-build-release: ## Build from the release recipe using conda-recipe
-	$(CONDA_BUILD) build --python $(PY_VER) $(RECIPE_RELEASE)
+	CONDA_BLD_PATH="$(CONDA_BLD_PATH)" $(CONDA_BUILD) build --python $(PY_VER) $(RECIPE_RELEASE)
+	$(MAKE) conda-index
 
 .PHONY: conda-build-purge
 conda-build-purge: ## Clear conda-build work and test directories
@@ -62,19 +72,23 @@ conda-build-purge: ## Clear conda-build work and test directories
 
 .PHONY: conda-test-env
 conda-test-env: ## Create a test env from the locally built package
-	$(CONDA) create -n $(TEST_ENV) $(CONDA_CHANNELS) --use-local $(PKG_NAME)
+	$(CONDA) create -n $(TEST_ENV) -c file://$(CONDA_BLD_PATH) $(CONDA_CHANNELS) $(PKG_NAME)
+
+.PHONY: conda-index
+conda-index: ## Index the conda build folder for local installs
+	$(CONDA_BUILD) index $(CONDA_BLD_PATH)
 
 .PHONY: conda-upload
 conda-upload: ## Upload the latest noarch build to Anaconda Cloud (ANACONDA_USER required)
 	if [ -z "$(ANACONDA_USER)" ]; then
 		echo "ANACONDA_USER is not set"; exit 1;
 	fi
-	pkg=$$(ls -t $(CONDA_BLD_DIR)/noarch/$(PKG_NAME)-*.conda 2>/dev/null | head -1)
+	pkg=$$(ls -t $(CONDA_BLD_PATH)/noarch/$(PKG_NAME)-*.conda 2>/dev/null | head -1)
 	if [ -z "$$pkg" ]; then
-		pkg=$$(ls -t $(CONDA_BLD_DIR)/noarch/$(PKG_NAME)-*.tar.bz2 2>/dev/null | head -1)
+		pkg=$$(ls -t $(CONDA_BLD_PATH)/noarch/$(PKG_NAME)-*.tar.bz2 2>/dev/null | head -1)
 	fi
 	if [ -z "$$pkg" ]; then
-		echo "No built package found in $(CONDA_BLD_DIR)/noarch"; exit 1;
+		echo "No built package found in $(CONDA_BLD_PATH)/noarch"; exit 1;
 	fi
 	anaconda upload --user $(ANACONDA_USER) "$$pkg"
 

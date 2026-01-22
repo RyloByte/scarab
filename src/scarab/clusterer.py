@@ -133,7 +133,7 @@ def runClusterer(mg_id, tmp_path, clst_path, cov_file, tetra_file, minhash_dict,
             clusterable_embedding = umap.UMAP(#random_state=42).fit_transform(mh_cov_df)
                                               n_neighbors=n_neighbors, min_dist=0.1,
                                               n_components=len(mh_cov_df.columns),
-                                              random_state=42, metric='manhattan', init=set_init
+                                              random_state=42, n_jobs=1, metric='manhattan', init=set_init
                                               ).fit_transform(mh_cov_df)
         except:
             try:
@@ -142,14 +142,14 @@ def runClusterer(mg_id, tmp_path, clst_path, cov_file, tetra_file, minhash_dict,
                 tmp_embedding = umap.UMAP(#random_state=42).fit_transform(mh_cov_df)
                                           n_neighbors=tmp_nn, min_dist=0.1,
                                           n_components=len(mh_cov_df.columns),
-                                          random_state=42, metric='manhattan',
+                                          random_state=42, n_jobs=1, metric='manhattan',
                                           init=set_init
                                           ).fit_transform(mh_cov_df)
                 logger.debug('Two-stage initialization succeeded; starting stage 2.')
                 clusterable_embedding = umap.UMAP(#random_state=42).fit_transform(mh_cov_df)
                                                   n_neighbors=n_neighbors, min_dist=0.1,
                                                   n_components=len(mh_cov_df.columns),
-                                                  random_state=42, metric='manhattan',
+                                                  random_state=42, n_jobs=1, metric='manhattan',
                                                   init=tmp_embedding
                                                   ).fit_transform(mh_cov_df)
             except:
@@ -160,7 +160,7 @@ def runClusterer(mg_id, tmp_path, clst_path, cov_file, tetra_file, minhash_dict,
                 clusterable_embedding = umap.UMAP(#random_state=42).fit_transform(mh_cov_df)
                                                   n_neighbors=n_neighbors, min_dist=0.1,
                                                   n_components=len(mh_cov_df.columns),
-                                                  random_state=42, metric='manhattan',
+                                                  random_state=42, n_jobs=1, metric='manhattan',
                                                   init=pca_emb
                                                   ).fit_transform(mh_cov_df)
         umap_feat_df = pd.DataFrame(clusterable_embedding, index=mh_cov_df.index.values)
@@ -180,7 +180,7 @@ def runClusterer(mg_id, tmp_path, clst_path, cov_file, tetra_file, minhash_dict,
         try:
             clusterable_embedding = umap.UMAP(#random_state=42).fit_transform(mh_tetra_df)
                                               n_neighbors=n_neighbors, min_dist=0.1, n_components=3,
-                                              random_state=42, metric='manhattan', init=set_init
+                                              random_state=42, n_jobs=1, metric='manhattan', init=set_init
                                               ).fit_transform(mh_tetra_df)
         except:
             try:
@@ -189,14 +189,14 @@ def runClusterer(mg_id, tmp_path, clst_path, cov_file, tetra_file, minhash_dict,
                 tmp_embedding = umap.UMAP(#random_state=42).fit_transform(mh_tetra_df)
                                           n_neighbors=tmp_nn, min_dist=0.1,
                                           n_components=3,
-                                          #random_state=42, metric='manhattan',
+                                          #random_state=42, n_jobs=1, metric='manhattan',
                                           init=set_init
                                           ).fit_transform(mh_tetra_df)
                 logger.debug('Two-stage initialization succeeded; starting stage 2.')
                 clusterable_embedding = umap.UMAP(#random_state=42).fit_transform(mh_tetra_df)
                                                   n_neighbors=n_neighbors, min_dist=0.1,
                                                   n_components=3,
-                                                  random_state=42, metric='manhattan',
+                                                  random_state=42, n_jobs=1, metric='manhattan',
                                                   init=tmp_embedding
                                                   ).fit_transform(mh_tetra_df)
             except:
@@ -207,7 +207,7 @@ def runClusterer(mg_id, tmp_path, clst_path, cov_file, tetra_file, minhash_dict,
                 clusterable_embedding = umap.UMAP(#random_state=42).fit_transform(mh_tetra_df)
                                                   n_neighbors=n_neighbors, min_dist=0.1,
                                                   n_components=3,
-                                                  random_state=42, metric='manhattan',
+                                                  random_state=42, n_jobs=1, metric='manhattan',
                                                   init=pca_emb
                                                   ).fit_transform(mh_tetra_df)
         umap_feat_df = pd.DataFrame(clusterable_embedding, index=mh_tetra_df.index.values)

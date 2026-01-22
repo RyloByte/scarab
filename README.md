@@ -53,16 +53,16 @@ sudo docker pull quay.io/hallamlab/scarab
 sudo docker run -it --network=host --rm -v ./:/cwd quay.io/hallamlab/scarab:latest \
   scarab recruit -m cwd/k12.gold_assembly.fasta -l cwd/docker_read_list.txt -o cwd/SCARAB_out -s cwd/SAG
 
-# Singularity
-singularity pull docker://quay.io/hallamlab/scarab
-singularity exec scarab_latest.sif scarab recruit -m k12.gold_assembly.fasta -l read_list.txt -o SCARAB_out -s SAG
+# Apptainer
+apptainer pull docker://quay.io/hallamlab/scarab
+apptainer exec scarab_latest.sif scarab recruit -m k12.gold_assembly.fasta -l read_list.txt -o SCARAB_out -s SAG
 ```
 
 Build locally:
 
 ```sh
 make docker-build
-make singularity-local-build
+make apptainer-build
 ```
 
 
@@ -72,6 +72,16 @@ Local conda build from the working tree (no version bump required):
 
 ```sh
 make conda-build-local
+# Faster build (requires boa in the build-tools env)
+make conda-mambabuild-local
+# Use a different tools env if needed
+# BUILD_ENV=build-tools make conda-mambabuild-local
+# If you built from a tools env, point to its conda-bld
+# CONDA_BLD_PATH="/home/ryan/mambaforge/envs/build-tools/conda-bld" make conda-test-env
+# You can override channels if needed
+# CONDA_CHANNELS="-c conda-forge -c bioconda" make conda-mambabuild-local
+# Use a different tools env if needed
+# BUILD_ENV=build-tools make conda-mambabuild-local
 make conda-test-env
 conda activate scarab_test
 scarab info

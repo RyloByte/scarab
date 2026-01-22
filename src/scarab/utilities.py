@@ -322,7 +322,7 @@ def entropy_cluster(ent_df):
                             columns=piv_df.columns
                             )
     umap_fit = umap.UMAP(n_neighbors=2, min_dist=0.0, n_components=2,
-                         random_state=42
+                         random_state=42, n_jobs=1
                          ).fit(scale_df)
     umap_emb = umap_fit.transform(scale_df)
     umap_df = pd.DataFrame(umap_emb, index=scale_df.index.values, columns=['u0', 'u1'])
@@ -419,17 +419,12 @@ def calc_real_entrophy(mba_cov_list, working_dir):
                                                   'Renyi_Entropy'
                                                   ])
     # Have to replace the np.inf with a real value for plotting
-    real_df['alpha_int'] = real_df['alpha'].copy()
-    real_df['alpha_int'].replace(4, 3, inplace=True)
-    real_df['alpha_int'].replace(8, 4, inplace=True)
-    real_df['alpha_int'].replace(16, 5, inplace=True)
-    real_df['alpha_int'].replace(32, 6, inplace=True)
-    real_df['alpha_int'].replace(np.inf, 7, inplace=True)
+    real_df['alpha_int'] = real_df['alpha'].replace({4: 3, 8: 4, 16: 5, 32: 6, np.inf: 7}).astype(int)
     x_labels = {0: 'Richness (a=0)', 1: 'Shannon (a=1)',
                 2: 'Simpson (a=2)', 3: '4', 4: '8', 5: '16',
                 6: '32', 7: 'Berger–Parker (a=inf)'
                 }
-    real_df['x_labels'] = [x_labels[x] for x in real_df['alpha_int']]
+    real_df['x_labels'] = real_df['alpha_int'].map(x_labels)
     real_df.to_csv(os.path.join(working_dir, 'entropy_table.tsv'), sep='\t', index=False)
 
     return real_df

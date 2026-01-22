@@ -59,17 +59,12 @@ def calc_ref_entropy(sample_list, ref_dir, rerun_ref):
                                                      'Renyi_Entropy'
                                                      ])
         # Have to replace the np.inf with a real value for plotting
-        ent_df['alpha_int'] = ent_df['alpha'].copy()
-        ent_df['alpha_int'].replace(4, 3, inplace=True)
-        ent_df['alpha_int'].replace(8, 4, inplace=True)
-        ent_df['alpha_int'].replace(16, 5, inplace=True)
-        ent_df['alpha_int'].replace(32, 6, inplace=True)
-        ent_df['alpha_int'].replace(np.inf, 7, inplace=True)
+        ent_df['alpha_int'] = ent_df['alpha'].replace({4: 3, 8: 4, 16: 5, 32: 6, np.inf: 7}).astype(int)
         x_labels = {0: 'Richness (a=0)', 1: 'Shannon (a=1)',
                     2: 'Simpson (a=2)', 3: '4', 4: '8', 5: '16',
                     6: '32', 7: 'Berger–Parker (a=inf)'
                     }
-        ent_df['x_labels'] = [x_labels[x] for x in ent_df['alpha_int']]
+        ent_df['x_labels'] = ent_df['alpha_int'].map(x_labels)
         ent_df.to_csv(entropy_file, sep='\t', index=False)
     else:
         ent_df = pd.read_csv(entropy_file, sep='\t', header=0)
@@ -189,17 +184,12 @@ def calc_real_entrophy(mba_cov_list, working_dir):
                                                   'Renyi_Entropy'
                                                   ])
     # Have to replace the np.inf with a real value for plotting
-    real_df['alpha_int'] = real_df['alpha'].copy()
-    real_df['alpha_int'].replace(4, 3, inplace=True)
-    real_df['alpha_int'].replace(8, 4, inplace=True)
-    real_df['alpha_int'].replace(16, 5, inplace=True)
-    real_df['alpha_int'].replace(32, 6, inplace=True)
-    real_df['alpha_int'].replace(np.inf, 7, inplace=True)
+    real_df['alpha_int'] = real_df['alpha'].replace({4: 3, 8: 4, 16: 5, 32: 6, np.inf: 7}).astype(int)
     x_labels = {0: 'Richness (a=0)', 1: 'Shannon (a=1)',
                 2: 'Simpson (a=2)', 3: '4', 4: '8', 5: '16',
                 6: '32', 7: 'Berger–Parker (a=inf)'
                 }
-    real_df['x_labels'] = [x_labels[x] for x in real_df['alpha_int']]
+    real_df['x_labels'] = real_df['alpha_int'].map(x_labels)
     real_df.to_csv(os.path.join(working_dir, 'entropy_table.tsv'), sep='\t', index=False)
 
     return real_df

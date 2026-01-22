@@ -15,7 +15,6 @@ CLASSIFIERS = [
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
     "Topic :: Scientific/Engineering :: Bio-Informatics",
 ]
 
@@ -51,15 +50,19 @@ SETUP_METADATA = \
         "entry_points": {'console_scripts': ['scarab = scarab.__main__:main']},
         "classifiers": CLASSIFIERS,
         "install_requires": [
-            "numpy",
-            "pandas",
-            "scikit-learn",
-            "umap-learn",
-            "hdbscan",
-            "sourmash",
-            "pyfastx",
-            "scikit-bio",
+            "numpy==1.24.4",
+            "pandas==2.0.3",
+            "scikit-learn==1.3.0",
+            "umap-learn==0.5.3",
+            "hdbscan==0.8.30",
+            "sourmash==4.8.2",
+            "pyfastx==1.1.0",
+            "scikit-bio==0.5.8",
             "tqdm",
+            "six==1.16.0",
+            "screed==1.1.2",
+            "scipy==1.11.1",
+            "numba==0.57.1",
         ]
     }
 
